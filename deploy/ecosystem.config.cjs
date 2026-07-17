@@ -13,10 +13,10 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: '3005',
-        DB_HOST: 'aws-0-eu-central-1.pooler.supabase.com',
-        DB_PORT: '6543',
+        DB_HOST: 'db.nsoyzwgrgperirqamusy.supabase.co',
+        DB_PORT: '5432',
         DB_NAME: 'postgres',
-        DB_USER: 'postgres.nsoyzwgrgperirqamusy',
+        DB_USER: 'postgres',
         DB_PASSWORD: 'Gbangbin@2001',
         JWT_SECRET: 'cm2_jwt_secret_change_in_production_2026',
         FRONTEND_URL: 'https://gridminer.vercel.app',
