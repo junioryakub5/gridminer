@@ -9,7 +9,7 @@ export default function AdminUsers() {
   const [filterRole, setFilterRole]     = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterTier, setFilterTier]     = useState('all');
-  const [loading, setLoading]       = useState(!allUsers.length);
+  const [loading, setLoading]       = useState(true);
   const [editUser, setEditUser]     = useState(null);
   const [form, setForm]             = useState({});
   const [saving, setSaving]         = useState(false);

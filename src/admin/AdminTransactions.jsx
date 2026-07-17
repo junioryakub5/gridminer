@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   CheckCircle, XCircle, Trash2, Search, AlertCircle, Loader2,
   X, User, CreditCard, Image, Award, Calendar, Clock,
@@ -300,14 +300,17 @@ export default function AdminTransactions() {
   const [search, setSearch]             = useState('');
   const [filterType, setFilterType]     = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [loading, setLoading]           = useState(!allTransactions.length);
+  const [loading, setLoading]           = useState(true);
   const [reviewId, setReviewId]         = useState(null);
+  const initialLoad = useRef(true);
 
   useEffect(() => {
-    loadAdminTxs({ search, type: filterType, status: filterStatus }).finally(() => setLoading(false));
+    loadAdminTxs({}).finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
+    // Skip the very first run — the mount effect above handles it
+    if (initialLoad.current) { initialLoad.current = false; return; }
     const t = setTimeout(() => {
       loadAdminTxs({ search, type: filterType !== 'all' ? filterType : '', status: filterStatus !== 'all' ? filterStatus : '' });
     }, 300);
