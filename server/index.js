@@ -23,10 +23,15 @@ const ALLOWED_ORIGINS = [
   ...(process.env.FRONTEND_URL_ALT ? [process.env.FRONTEND_URL_ALT] : []),
 ];
 
+// Allow any *.vercel.app preview deployment
+const isAllowedOrigin = (origin) =>
+  !origin ||
+  ALLOWED_ORIGINS.includes(origin) ||
+  /^https:\/\/[a-z0-9-]+-[a-z0-9-]+\.vercel\.app$/.test(origin);
+
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl, etc.)
-    if (!origin || ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    if (isAllowedOrigin(origin)) return callback(null, true);
     callback(new Error(`CORS: origin ${origin} not allowed`));
   },
   credentials: true,
