@@ -54,7 +54,7 @@ server {
 
     # API proxy
     location /api/ {
-        proxy_pass         http://localhost:3001;
+        proxy_pass         http://localhost:3005;
         proxy_http_version 1.1;
         proxy_set_header   Upgrade $http_upgrade;
         proxy_set_header   Connection 'upgrade';
@@ -79,7 +79,7 @@ server {
 
     # Upload files proxy
     location /uploads/ {
-        proxy_pass http://localhost:3001;
+        proxy_pass http://localhost:3005;
     }
 
     location / {
@@ -98,7 +98,7 @@ echo "[7/7] Configuring firewall..."
 ufw allow 22
 ufw allow 80
 ufw allow 443
-ufw allow 3001
+ufw allow 3005
 ufw --force enable
 
 echo ""

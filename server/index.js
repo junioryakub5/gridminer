@@ -10,7 +10,7 @@ import adminRoutes  from './routes/admin.js';
 import publicRoutes from './routes/public.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3005;
 
 const app = express();
 

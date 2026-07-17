@@ -68,7 +68,7 @@ pm2 save
 
 # Quick health check
 sleep 3
-curl -s http://localhost:3001/api/health || echo "Health check failed — check pm2 logs"
+curl -s http://localhost:3005/api/health || echo "Health check failed — check pm2 logs"
 
 REMOTE_COMMANDS
 
