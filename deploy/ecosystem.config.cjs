@@ -1,0 +1,31 @@
+module.exports = {
+  apps: [
+    {
+      name: 'cloudmining-api',
+      script: './server/index.js',
+      cwd: '/var/www/cloudmining-api',
+      interpreter: 'node',
+      instances: 1,
+      exec_mode: 'fork',
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '512M',
+      env: {
+        NODE_ENV: 'production',
+        PORT: '3005',
+        DB_HOST: 'aws-0-eu-central-1.pooler.supabase.com',
+        DB_PORT: '6543',
+        DB_NAME: 'postgres',
+        DB_USER: 'postgres.nsoyzwgrgperirqamusy',
+        DB_PASSWORD: 'Gbangbin@2001',
+        JWT_SECRET: 'cm2_jwt_secret_change_in_production_2026',
+        FRONTEND_URL: 'https://gridminer.vercel.app',
+        FRONTEND_URL_ALT: 'https://cloudmining.com.ng',
+      },
+      log_file: '/var/log/cloudmining/app.log',
+      error_file: '/var/log/cloudmining/error.log',
+      merge_logs: true,
+      log_date_format: 'YYYY-MM-DD HH:mm:ss',
+    },
+  ],
+};
