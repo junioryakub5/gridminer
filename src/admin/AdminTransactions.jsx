@@ -118,29 +118,46 @@ function ReviewModal({ txId, onClose, onApprove, onReject }) {
                 )}
               </Section>
 
-              {/* Upgrade Details */}
-              <Section icon={<TrendingUp size={15} color="#1a9e8f" />} title="Upgrade Details" color="#1a9e8f10">
-                <Row label="Requested Tier" value={`Tier ${tierNum ?? '—'}`} bold chip chipColor="#f59e0b" />
-                <Row label="Mining Reward"  value={detail.tierEarn ? `$${detail.tierEarn}/24h` : '—'} />
-                <Row label="Mining Period"  value={detail.tierPeriod ? `${detail.tierPeriod} days` : '—'} />
-                <Row label="Submitted"      value={detail.date || '—'} />
-                <Row label="Label"          value={detail.label || '—'} />
-              </Section>
+              {/* Upgrade or Withdrawal Details */}
+              {detail.type === 'withdrawals' ? (
+                <Section icon={<Wallet size={15} color="#ef4444" />} title="Withdrawal Details" color="#ef444410">
+                  <Row label="Amount Requested" value={`$${parseFloat(detail.amount).toFixed(2)} USDT`} bold />
+                  <Row label="Fee"              value="$1.00 USDT" />
+                  <Row label="Net to Send"      value={detail.withdrawalNet != null ? `$${detail.withdrawalNet.toFixed(2)} USDT` : '—'} bold chip chipColor="#ef4444" />
+                  <Row label="Destination"      value={
+                    <span style={{ fontFamily: 'monospace', fontSize: 11, wordBreak: 'break-all' }}>
+                      {detail.withdrawalAddress || detail.userWallet || '—'}
+                    </span>
+                  } />
+                  <Row label="Submitted" value={detail.date || '—'} />
+                </Section>
+              ) : (
+                <Section icon={<TrendingUp size={15} color="#1a9e8f" />} title="Upgrade Details" color="#1a9e8f10">
+                  <Row label="Requested Tier" value={`Tier ${tierNum ?? '—'}`} bold chip chipColor="#f59e0b" />
+                  <Row label="Mining Reward"  value={detail.tierEarn ? `$${detail.tierEarn}/24h` : '—'} />
+                  <Row label="Mining Period"  value={detail.tierPeriod ? `${detail.tierPeriod} days` : '—'} />
+                  <Row label="Submitted"      value={detail.date || '—'} />
+                  <Row label="Label"          value={detail.label || '—'} />
+                </Section>
+              )}
 
-              {/* Payment Details */}
-              <Section icon={<CreditCard size={15} color={pm.color} />} title="Payment Details" color={pm.color + '10'}>
-                <Row label="Method" value={
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                    <span>{pm.icon}</span>
-                    <span style={{ fontWeight: 700 }}>{pm.label}</span>
-                  </span>
-                } />
-                <Row label="USD Amount"  value={detail.tierPriceUsd  ? `$${detail.tierPriceUsd.toFixed(2)}`  : '—'} bold />
-                {detail.tierPriceNgn > 0 && <Row label="NGN Amount"  value={`₦${detail.tierPriceNgn.toLocaleString()}`} />}
-                {detail.tierPriceGhs > 0 && <Row label="GHS Amount"  value={`₵${detail.tierPriceGhs.toLocaleString()}`} />}
-              </Section>
+              {/* Payment Details — only for upgrades */}
+              {detail.type !== 'withdrawals' && (
+                <Section icon={<CreditCard size={15} color={pm.color} />} title="Payment Details" color={pm.color + '10'}>
+                  <Row label="Method" value={
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      <span>{pm.icon}</span>
+                      <span style={{ fontWeight: 700 }}>{pm.label}</span>
+                    </span>
+                  } />
+                  <Row label="USD Amount"  value={detail.tierPriceUsd  ? `$${detail.tierPriceUsd.toFixed(2)}`  : '—'} bold />
+                  {detail.tierPriceNgn > 0 && <Row label="NGN Amount"  value={`₦${detail.tierPriceNgn.toLocaleString()}`} />}
+                  {detail.tierPriceGhs > 0 && <Row label="GHS Amount"  value={`₵${detail.tierPriceGhs.toLocaleString()}`} />}
+                </Section>
+              )}
 
-              {/* Payment Proof */}
+              {/* Payment Proof — only for upgrades */}
+              {detail.type !== 'withdrawals' && (
               <Section icon={<Image size={15} color="#8b5cf6" />} title="Payment Proof Screenshot" color="#8b5cf610">
                 {proofUrl ? (
                   <div>
@@ -182,6 +199,7 @@ function ReviewModal({ txId, onClose, onApprove, onReject }) {
                   </div>
                 )}
               </Section>
+              )}
 
               {error && (
                 <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, padding: '10px 14px', color: '#dc2626', fontSize: 12 }}>
@@ -443,11 +461,15 @@ export default function AdminTransactions() {
                   <td><span className={`badge badge-${tx.status}`}>{tx.status}</span></td>
                   <td>
                     <div className="action-btns">
-                      {tx.type === 'upgrades' && (
+                      {(tx.type === 'upgrades' || tx.type === 'withdrawals') && (
                         <button
                           className="act-btn"
                           style={{
-                            background: tx.status === 'pending' ? 'linear-gradient(135deg,#f59e0b,#d97706)' : '#f0f7ff',
+                            background: tx.status === 'pending'
+                              ? tx.type === 'withdrawals'
+                                ? 'linear-gradient(135deg,#ef4444,#dc2626)'
+                                : 'linear-gradient(135deg,#f59e0b,#d97706)'
+                              : '#f0f7ff',
                             color: tx.status === 'pending' ? 'white' : '#0d6e99',
                             fontWeight: 700,
                           }}
@@ -457,7 +479,7 @@ export default function AdminTransactions() {
                           {tx.status === 'pending' ? 'Review' : 'Details'}
                         </button>
                       )}
-                      {tx.type !== 'upgrades' && tx.status !== 'pending' && (
+                      {tx.type !== 'upgrades' && tx.type !== 'withdrawals' && tx.status !== 'pending' && (
                         <select
                           className="admin-select"
                           style={{ padding: '4px 8px', fontSize: 11, borderRadius: 6 }}
