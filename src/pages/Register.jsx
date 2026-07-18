@@ -33,7 +33,7 @@ export default function Register() {
       <div className="login-bg"><div className="cloud-deco tl" /><div className="cloud-deco br" /></div>
       <div className="login-container">
         <div className="login-logo">
-          <h1 className="logo-text">Cloud Mining <span className="logo-accent">2.0</span></h1>
+          <h1 className="logo-text">Gridminer</h1>
           <p className="logo-sub">Create your account</p>
         </div>
         <form className="login-card" onSubmit={handle}>

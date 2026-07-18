@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────────────
-   API Service — Cloud Mining 2.0
+   API Service — Gridminer
    All fetch calls to the Express backend go through here.
 ───────────────────────────────────────────────────────── */
 

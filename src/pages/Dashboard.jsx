@@ -200,7 +200,7 @@ export default function Dashboard() {
         <div>
           <span className="info-title">How it works</span>
           <p className="info-body">
-            Cloud mining runs 24/7 on the <strong className="teal">TRC20 network</strong>. Tap the clock to collect your daily reward. Upgrade your tier to earn more per cycle.
+            Gridminer runs 24/7 on the <strong className="teal">TRC20 network</strong>. Tap the clock to collect your daily reward. Upgrade your tier to earn more per cycle.
           </p>
           {tierInfo && (
             <p className="info-body" style={{ marginTop: 6 }}>

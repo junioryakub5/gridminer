@@ -32,8 +32,8 @@ export default function AdminLayout({ children, title, breadcrumb }) {
     <>
       {/* Logo */}
       <div className="admin-logo">
-        <div className="admin-logo-text">Cloud Mining <span>2.0</span></div>
-        <div className="admin-logo-sub">Administration Panel</div>
+        <div className="admin-logo-text">Grid<span>miner</span></div>
+        <div className="admin-logo-sub">Admin Panel</div>
       </div>
 
       {/* Nav */}

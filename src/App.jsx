@@ -34,7 +34,7 @@ import AdminProtectedRoute   from './admin/AdminProtectedRoute';
 function BootLoader() {
   return (
     <div className="boot-loader">
-      <div className="boot-logo">Cloud Mining <span>2.0</span></div>
+      <div className="boot-logo">Grid<span>miner</span></div>
       <div className="boot-spinner" />
     </div>
   );

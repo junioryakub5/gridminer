@@ -59,5 +59,5 @@ app.use((err, req, res, _next) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀  Cloud Mining API running on http://0.0.0.0:${PORT}`);
+  console.log(`🚀  Gridminer API running on http://0.0.0.0:${PORT}`);
 });

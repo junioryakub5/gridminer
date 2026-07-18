@@ -34,14 +34,14 @@ export default function AdminLogin() {
     <div className="admin-login-page">
       <div className="alp-box">
         <div className="alp-logo">
-          <span className="alp-logo-text">Cloud Mining <span>2.0</span></span>
-          <span className="alp-logo-sub">Administration Panel</span>
+          <span className="alp-logo-text">Grid<span>miner</span></span>
+          <span className="alp-logo-sub">Admin Panel</span>
         </div>
         <div className="alp-badge"><ShieldCheck size={14} /> Admin Access Only</div>
         <form className="alp-form" onSubmit={handleLogin}>
           <div className="admin-form-group">
             <label className="admin-form-label">Email Address</label>
-            <input className="admin-field" type="email" placeholder="admin@cloudmining.com" value={email} onChange={e => setEmail(e.target.value)} required />
+            <input className="admin-field" type="email" placeholder="admin@gridminer.app" value={email} onChange={e => setEmail(e.target.value)} required />
           </div>
           <div className="admin-form-group">
             <label className="admin-form-label">Password</label>
