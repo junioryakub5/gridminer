@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Edit2, Save, X, Loader2 } from 'lucide-react';
+import { Edit2, Save, X, Loader2, Info } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import AdminLayout from './AdminLayout';
 
@@ -33,7 +33,7 @@ export default function AdminTiers() {
 
   return (
     <AdminLayout title="Mining Tier Plans" breadcrumb="Admin › Mining Tiers">
-      <div className="admin-info-banner">ℹ️ Changes to tier earnings and prices are immediately reflected in the user-facing upgrade page. Changes are persisted to the database.</div>
+      <div className="admin-info-banner" style={{ display:'flex', alignItems:'center', gap:8 }}><Info size={14} /> Changes to tier earnings and prices are immediately reflected in the user-facing upgrade page. Changes are persisted to the database.</div>
       <div className="admin-tiers-grid">
         {tiers.map((tier, i) => {
           const userCount = allUsers.filter(u => u.role !== 'admin' && u.tier === tier.tier).length;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Activity, ClipboardList } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import AdminLayout from './AdminLayout';
 
@@ -27,12 +27,12 @@ export default function AdminActivity() {
     <AdminLayout title="Activity Log" breadcrumb="Admin › Activity Log">
       <div className="admin-card">
         <div className="admin-card-header">
-          <span className="admin-card-title">🕐 Admin Activity Log</span>
+          <span className="admin-card-title" style={{ display:'flex', alignItems:'center', gap:6 }}><Activity size={15} /> Admin Activity Log</span>
           <span style={{ fontSize:12, color:'#7aabcc' }}>{activityLog.length} actions recorded</span>
         </div>
         {activityLog.length === 0 ? (
           <div className="admin-empty">
-            <div className="admin-empty-icon">📋</div>
+            <div className="admin-empty-icon"><ClipboardList size={32} color="#8aabcc" /></div>
             <p>No admin actions recorded yet.</p>
             <p style={{ fontSize:12, marginTop:6 }}>Actions appear after you manage users, transactions, tiers, or settings.</p>
           </div>

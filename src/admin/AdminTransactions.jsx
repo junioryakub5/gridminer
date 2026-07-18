@@ -2,19 +2,20 @@ import { useState, useEffect, useRef } from 'react';
 import {
   CheckCircle, XCircle, Trash2, Search, AlertCircle, Loader2,
   X, User, CreditCard, Image, Award, Calendar, Clock,
-  TrendingUp, Wallet, ExternalLink, Shield, RefreshCw
+  TrendingUp, Wallet, ExternalLink, Shield, RefreshCw,
+  Pickaxe, Link2, ArrowDownCircle, Zap, ListOrdered, Info
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import AdminLayout from './AdminLayout';
 import { adminAPI } from '../services/api';
 
-const TX_ICONS = { mining: '⛏', upgrades: '🏆', withdrawals: '💸', binding: '🔗' };
+const TX_ICON_MAP = { mining: Pickaxe, upgrades: Award, withdrawals: ArrowDownCircle, binding: Link2 };
 
 const PM_LABELS = {
-  usdt:    { label: 'USDT (TRC20)',       icon: '🔵', color: '#26a17b' },
-  naira:   { label: 'Naira (Bank)',        icon: '🟢', color: '#22c55e' },
-  cedis:   { label: 'GHS (Mobile Money)', icon: '🟡', color: '#f59e0b' },
-  unknown: { label: 'Unknown',             icon: '❓', color: '#8aabcc' },
+  usdt:    { label: 'USDT (TRC20)',       color: '#26a17b' },
+  naira:   { label: 'Naira (Bank)',        color: '#22c55e' },
+  cedis:   { label: 'GHS (Mobile Money)', color: '#f59e0b' },
+  unknown: { label: 'Unknown',             color: '#8aabcc' },
 };
 
 /* ─── Review Modal ─────────────────────────────────────── */
@@ -145,11 +146,11 @@ function ReviewModal({ txId, onClose, onApprove, onReject }) {
               {detail.type !== 'withdrawals' && (
                 <Section icon={<CreditCard size={15} color={pm.color} />} title="Payment Details" color={pm.color + '10'}>
                   <Row label="Method" value={
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                      <span>{pm.icon}</span>
-                      <span style={{ fontWeight: 700 }}>{pm.label}</span>
-                    </span>
-                  } />
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <CreditCard size={12} color={pm.color} />
+                    <span style={{ fontWeight: 700 }}>{pm.label}</span>
+                  </span>
+                } />
                   <Row label="USD Amount"  value={detail.tierPriceUsd  ? `$${detail.tierPriceUsd.toFixed(2)}`  : '—'} bold />
                   {detail.tierPriceNgn > 0 && <Row label="NGN Amount"  value={`₦${detail.tierPriceNgn.toLocaleString()}`} />}
                   {detail.tierPriceGhs > 0 && <Row label="GHS Amount"  value={`₵${detail.tierPriceGhs.toLocaleString()}`} />}
@@ -251,7 +252,7 @@ function ReviewModal({ txId, onClose, onApprove, onReject }) {
         {!loading && !error && detail?.status !== 'pending' && (
           <div style={{ padding: '14px 24px', borderTop: '1px solid #f0f5ff', background: '#fafcff', textAlign: 'center' }}>
             <span className={`badge badge-${detail.status}`} style={{ fontSize: 13, padding: '6px 16px' }}>
-              {detail.status === 'completed' ? '✓ Approved' : '✗ Rejected'}
+              {detail.status === 'completed' ? 'Approved' : 'Rejected'}
             </span>
           </div>
         )}
@@ -345,13 +346,13 @@ export default function AdminTransactions() {
   const handleApprove = async (id) => {
     await adminApproveUpgrade(id);
     await loadAdminTxs();
-    showToast('✅ Upgrade approved successfully');
+    showToast('Upgrade approved successfully');
   };
 
   const handleReject = async (id) => {
     await adminRejectUpgrade(id);
     await loadAdminTxs();
-    showToast('❌ Upgrade request rejected');
+    showToast('Upgrade request rejected');
   };
 
   if (loading) return (
@@ -381,7 +382,7 @@ export default function AdminTransactions() {
 
       <div className="admin-card">
         <div className="admin-card-header">
-          <span className="admin-card-title">⛏ All Transactions</span>
+          <span className="admin-card-title" style={{ display:'flex', alignItems:'center', gap:6 }}><ListOrdered size={15} /> All Transactions</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 12, color: '#7aabcc' }}>{allTransactions.length} records</span>
             <button className="admin-btn admin-btn-secondary admin-btn-sm" onClick={() => loadAdminTxs()}>
@@ -440,15 +441,11 @@ export default function AdminTransactions() {
                     </div>
                   </td>
                   <td style={{ fontWeight: 600, fontSize: 13 }}>{tx.label}</td>
-                  <td>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12 }}>
-                      {TX_ICONS[tx.type] || '💫'} {tx.type}
-                    </span>
-                  </td>
+                  <td><span style={{ display:'flex', alignItems:'center', gap:5, fontSize:12 }}>{(() => { const I = TX_ICON_MAP[tx.type] || Zap; return <I size={12} />; })()} {tx.type}</span></td>
                   <td>
                     {tx.paymentMethod ? (
-                      <span style={{ fontSize: 11, color: PM_LABELS[tx.paymentMethod]?.color || '#8aabcc', fontWeight: 600 }}>
-                        {PM_LABELS[tx.paymentMethod]?.icon} {PM_LABELS[tx.paymentMethod]?.label || tx.paymentMethod}
+                      <span style={{ fontSize: 11, color: PM_LABELS[tx.paymentMethod]?.color || '#8aabcc', fontWeight: 600, display:'flex', alignItems:'center', gap:4 }}>
+                        <CreditCard size={10} /> {PM_LABELS[tx.paymentMethod]?.label || tx.paymentMethod}
                       </span>
                     ) : (
                       <span style={{ fontSize: 11, color: '#8aabcc' }}>—</span>

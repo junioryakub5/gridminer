@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, Copy, Loader2 } from 'lucide-react';
+import { Save, Copy, Loader2, Info, Eye } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import AdminLayout from './AdminLayout';
 
@@ -31,7 +31,7 @@ export default function AdminSettings() {
 
   return (
     <AdminLayout title="Payment Channel Settings" breadcrumb="Admin › Payment Setup">
-      <div className="admin-info-banner">ℹ️ These details are shown to users when upgrading their tier. Changes take effect immediately and are persisted to the database.</div>
+      <div className="admin-info-banner" style={{ display:'flex', alignItems:'center', gap:8 }}><Info size={14} /> These details are shown to users when upgrading their tier. Changes take effect immediately and are persisted to the database.</div>
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
         {/* USDT */}
         <div className="admin-card" style={{ overflow:'visible' }}>
@@ -73,7 +73,7 @@ export default function AdminSettings() {
         </div>
         {/* Preview */}
         <div className="admin-card">
-          <div className="admin-card-header"><span className="admin-card-title">👁 Live Preview</span></div>
+          <div className="admin-card-header"><span className="admin-card-title" style={{ display:'flex', alignItems:'center', gap:6 }}><Eye size={15} /> Live Preview</span></div>
           <div style={{ padding:'16px 22px', display:'flex', flexDirection:'column', gap:14 }}>
             {[
               { label:'USDT Wallet', val: form.usdtWallet || '—', mono:true },

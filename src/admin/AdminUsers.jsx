@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Edit2, Trash2, Power, RotateCcw, Loader2 } from 'lucide-react';
+import { Search, Edit2, Trash2, Power, RotateCcw, Loader2, Users, X, Info } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import AdminLayout from './AdminLayout';
 
@@ -53,7 +53,7 @@ export default function AdminUsers() {
     <AdminLayout title="User Management" breadcrumb="Admin › Users">
       <div className="admin-card">
         <div className="admin-card-header">
-          <span className="admin-card-title"><span>👥</span> All Users</span>
+          <span className="admin-card-title" style={{ display:'flex', alignItems:'center', gap:6 }}><Users size={15} /> All Users</span>
           <span style={{ fontSize:12, color:'#7aabcc' }}>{filtered.length} of {allUsers.length} users</span>
         </div>
         <div className="admin-toolbar">
@@ -110,7 +110,7 @@ export default function AdminUsers() {
           <div className="admin-modal" onClick={e => e.stopPropagation()}>
             <div className="admin-modal-header">
               <span className="admin-modal-title">Edit User — {editUser.name}</span>
-              <button className="admin-modal-close" onClick={closeEdit}>✕</button>
+              <button className="admin-modal-close" onClick={closeEdit}><X size={14} /></button>
             </div>
             <div className="admin-modal-body">
               <div className="admin-field-row">
@@ -122,7 +122,7 @@ export default function AdminUsers() {
                 <div className="admin-form-group"><label className="admin-form-label">Balance (USDT)</label><input className="admin-field" type="number" step="0.01" value={form.balance} onChange={e => setForm(p=>({...p,balance:e.target.value}))} /></div>
               </div>
               <div className="admin-form-group"><label className="admin-form-label">TRC20 Wallet Address</label><input className="admin-field" value={form.walletAddress} onChange={e => setForm(p=>({...p,walletAddress:e.target.value}))} placeholder="Not set" /></div>
-              <div className="admin-info-banner">ℹ️ Changing tier here immediately updates the user. Use Transactions page to also approve payment.</div>
+              <div className="admin-info-banner" style={{ display:'flex', alignItems:'center', gap:8 }}><Info size={13} /> Changing tier here immediately updates the user. Use Transactions page to also approve payment.</div>
             </div>
             <div className="admin-modal-footer">
               <button className="admin-btn admin-btn-secondary" onClick={closeEdit}>Cancel</button>
