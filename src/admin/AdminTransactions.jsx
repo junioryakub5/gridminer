@@ -53,13 +53,7 @@ function ReviewModal({ txId, onClose, onApprove, onReject }) {
       <div className="admin-modal-overlay" onClick={onClose} style={{ zIndex: 600 }} />
 
       {/* Panel */}
-      <div style={{
-        position: 'fixed', top: 0, right: 0, bottom: 0, width: 540,
-        background: 'white', zIndex: 700, display: 'flex', flexDirection: 'column',
-        boxShadow: '-8px 0 40px rgba(0,0,0,0.18)',
-        fontFamily: "'Inter', -apple-system, sans-serif",
-        animation: 'slideInRight 0.28s cubic-bezier(0.16,1,0.3,1)',
-      }}>
+      <div className="admin-review-panel">
 
         {/* Header */}
         <div style={{

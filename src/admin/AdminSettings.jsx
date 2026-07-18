@@ -32,7 +32,7 @@ export default function AdminSettings() {
   return (
     <AdminLayout title="Payment Channel Settings" breadcrumb="Admin › Payment Setup">
       <div className="admin-info-banner" style={{ display:'flex', alignItems:'center', gap:8 }}><Info size={14} /> These details are shown to users when upgrading their tier. Changes take effect immediately and are persisted to the database.</div>
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
+      <div className="admin-settings-grid">
         {/* USDT */}
         <div className="admin-card" style={{ overflow:'visible' }}>
           <div className="admin-card-header"><span className="admin-card-title">₮ USDT TRC20 Wallet</span></div>

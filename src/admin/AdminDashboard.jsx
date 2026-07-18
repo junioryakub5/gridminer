@@ -56,7 +56,7 @@ export default function AdminDashboard() {
         <StatCard icon={BarChart3}       label="Total Transactions" value={stats?.totalTransactions ?? 0}                        color="#ef4444"  sub="All time" />
       </div>
 
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
+      <div className="admin-dashboard-grid">
         {/* Recent Transactions */}
         <div className="admin-card">
           <div className="admin-card-header">
