@@ -3,9 +3,33 @@ import {
   Bell, Info, Loader2, TrendingUp, History as HistoryIcon,
   ArrowDownToLine, CreditCard, Lock, Cpu, Zap
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 import BottomNav from '../components/BottomNav';
+
+/* ── Coin sound via Web Audio API (no file needed) ── */
+function playCoinSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const play = (freq, startTime, duration, gainVal) => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, startTime);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.5, startTime + duration * 0.3);
+      gain.gain.setValueAtTime(gainVal, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+    };
+    const t = ctx.currentTime;
+    play(880,  t,        0.15, 0.4);
+    play(1320, t + 0.05, 0.18, 0.3);
+    play(1760, t + 0.10, 0.22, 0.25);
+  } catch (_) { /* audio not supported */ }
+}
 
 /* ── Mining countdown clock widget ── */
 function MineClock({ lastMinedAt, canMine, onMine, mining }) {
@@ -89,6 +113,7 @@ export default function Dashboard() {
 
   const handleMine = async () => {
     if (!canMine || mining) return;
+    playCoinSound();
     setMining(true);
     try {
       const earned = await mine();
