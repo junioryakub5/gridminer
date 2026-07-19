@@ -2,7 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import 'dotenv/config';
+import dotenv from 'dotenv';
+
+const __dirnameBootstrap = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirnameBootstrap, '.env') });
 
 import authRoutes   from './routes/auth.js';
 import userRoutes   from './routes/user.js';
