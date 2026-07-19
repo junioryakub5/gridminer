@@ -166,6 +166,15 @@ input, textarea { outline: none; border: none; font-family: inherit; }
   display: flex; align-items: center; justify-content: center;
 }
 .user-app .hint-text { font-size: 11.5px; color: #7aabcc; text-align: center; }
+.user-app .pill-arrow {
+  text-align: center; font-size: 10px; color: #b0cde0;
+  margin: -6px 0 -4px;
+  animation: pill-bounce 1.4s ease-in-out infinite;
+}
+@keyframes pill-bounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(3px); }
+}
 
 .user-app .link-sm {
   font-size: 13px; font-weight: 500; color: #4a7a9b;

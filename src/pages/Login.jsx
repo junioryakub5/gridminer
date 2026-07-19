@@ -47,6 +47,7 @@ export default function Login() {
             <span className="pill-play"><Play size={10} fill="white" /></span>
             New here? Start with this video
           </button>
+          <div className="pill-arrow">▼</div>
           <p className="hint-text">Start here to understand how everything works</p>
           <button type="button" className="link-sm" onClick={() => navigate('/forgot-password')}>Forgot Password?</button>
           <div className="register-row">
