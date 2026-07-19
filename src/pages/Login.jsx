@@ -48,7 +48,7 @@ export default function Login() {
             New here? Start with this video
           </button>
           <p className="hint-text">Start here to understand how everything works</p>
-          <button type="button" className="link-sm" onClick={() => alert('Password reset — contact support.')}>Forgot Password?</button>
+          <button type="button" className="link-sm" onClick={() => navigate('/forgot-password')}>Forgot Password?</button>
           <p className="link-sm">Don't have an account? <button type="button" className="link-accent" onClick={() => navigate('/register')}>Create Account</button></p>
         </form>
       </div>

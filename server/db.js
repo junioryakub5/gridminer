@@ -22,9 +22,22 @@ pool.on('error', (err) => {
   console.error('❌ PostgreSQL pool error:', err.message);
 });
 
-/* ── Test connection on startup ── */
+/* ── Test connection + auto-migrate on startup ── */
 pool.query('SELECT NOW()')
-  .then(() => console.log('✅  Connected to Supabase PostgreSQL'))
+  .then(async () => {
+    console.log('✅  Connected to Supabase PostgreSQL');
+    // Auto-create tables that may be missing
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS password_resets (
+        id         SERIAL PRIMARY KEY,
+        user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        token      TEXT NOT NULL UNIQUE,
+        expires_at TIMESTAMPTZ NOT NULL,
+        used       BOOLEAN NOT NULL DEFAULT false,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+  })
   .catch((err) => {
     console.error('❌  Supabase connection failed:', err.message);
     console.error('   Check DATABASE_URL in server/.env');
