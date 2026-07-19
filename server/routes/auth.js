@@ -130,16 +130,18 @@ router.post('/forgot-password', async (req, res) => {
 
     const resetUrl = `${process.env.FRONTEND_URL || 'https://gridminer.site'}/reset-password?token=${token}`;
 
-    // Send email
+    // Send email via Gmail SMTP port 587 (STARTTLS)
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false, // STARTTLS
       auth: {
         user: process.env.GMAIL_USER,
         pass: process.env.GMAIL_PASS,
       },
     });
 
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: `"Gridminer" <${process.env.GMAIL_USER}>`,
       to: email.toLowerCase(),
       subject: 'Reset your Gridminer password',
@@ -159,6 +161,7 @@ router.post('/forgot-password', async (req, res) => {
         </div>
       `,
     });
+    console.log(`✉️  Reset email sent to ${email} — messageId: ${info.messageId}`);
 
     res.json({ message: 'If that email exists, a reset link has been sent.' });
   } catch (err) {
