@@ -113,93 +113,78 @@ router.post('/forgot-password', async (req, res) => {
     );
 
     // Always return success to avoid email enumeration
-    if (!rows.length) return res.json({ message: 'If that email exists, a reset link has been sent.' });
+    if (!rows.length) return res.json({ message: 'ok' });
 
     const user = rows[0];
-    const token = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
-    // Invalidate old tokens for this user
+    // Generate a 6-digit OTP code
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    // Invalidate old codes for this user
     await pool.query('DELETE FROM password_resets WHERE user_id = $1', [user.id]);
 
-    // Store new token
+    // Store new code
     await pool.query(
       'INSERT INTO password_resets (user_id, token, expires_at) VALUES ($1, $2, $3)',
-      [user.id, token, expiresAt]
+      [user.id, code, expiresAt]
     );
 
-    const resetUrl = `${process.env.FRONTEND_URL || 'https://gridminer.site'}/reset-password?token=${token}`;
-
-    // Send email via Gmail SMTP port 587 (STARTTLS)
+    // Send email
     const transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
       port: 587,
-      secure: false, // STARTTLS
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASS,
-      },
+      secure: false,
+      auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_PASS },
     });
 
     const info = await transporter.sendMail({
       from: `"Gridminer" <${process.env.GMAIL_USER}>`,
       to: email.toLowerCase(),
-      subject: 'Reset your Gridminer password',
-      text: `Hi ${user.name},\n\nReset your Gridminer password by visiting this link:\n${resetUrl}\n\nThis link expires in 1 hour. If you didn't request this, ignore this email.\n\n— Gridminer`,
+      subject: `${code} is your Gridminer reset code`,
+      text: `Hi ${user.name},\n\nYour Gridminer password reset code is:\n\n${code}\n\nThis code expires in 15 minutes. If you didn't request this, ignore this email.\n\n— Gridminer`,
       html: `
-        <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;background:#f4f8fc;padding:32px 16px;">
+        <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#f4f8fc;padding:32px 16px;">
           <div style="background:#ffffff;border-radius:16px;padding:36px 32px;box-shadow:0 4px 24px rgba(0,50,80,0.10);">
-            <div style="text-align:center;margin-bottom:24px;">
-              <span style="font-size:26px;font-weight:800;color:#1a2a3a;letter-spacing:-0.5px;">Grid<span style="color:#1a9e8f;">miner</span></span>
+            <div style="text-align:center;margin-bottom:20px;">
+              <span style="font-size:24px;font-weight:800;color:#1a2a3a;">Grid<span style="color:#1a9e8f;">miner</span></span>
             </div>
-            <h2 style="font-size:18px;font-weight:700;color:#1a2a3a;margin:0 0 8px;">Password Reset Request</h2>
-            <p style="color:#4a7a9b;font-size:14px;line-height:1.6;margin:0 0 24px;">Hi ${user.name}, we received a request to reset your Gridminer password. Click the button below to set a new one.</p>
-
-            <!-- Bulletproof button -->
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto 24px;">
-              <tr>
-                <td style="border-radius:12px;background:linear-gradient(135deg,#1a9e8f,#0d7ab5);">
-                  <a href="${resetUrl}"
-                     target="_blank"
-                     style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:12px;font-family:Arial,sans-serif;">Reset Password</a>
-                </td>
-              </tr>
-            </table>
-
-            <p style="color:#8aabcc;font-size:12px;line-height:1.6;margin:0 0 16px;">This link expires in <strong>1 hour</strong>. If you didn't request a reset, you can safely ignore this email.</p>
+            <h2 style="font-size:17px;font-weight:700;color:#1a2a3a;margin:0 0 8px;text-align:center;">Password Reset Code</h2>
+            <p style="color:#4a7a9b;font-size:13px;line-height:1.6;margin:0 0 24px;text-align:center;">Hi ${user.name}, use the code below to reset your password.</p>
+            <div style="background:#f0f9f8;border:2px solid #1a9e8f;border-radius:14px;padding:20px;text-align:center;margin-bottom:24px;">
+              <span style="font-size:42px;font-weight:800;letter-spacing:10px;color:#1a2a3a;font-family:'Courier New',monospace;">${code}</span>
+            </div>
+            <p style="color:#8aabcc;font-size:12px;text-align:center;margin:0 0 16px;">This code expires in <strong>15 minutes</strong>.</p>
             <hr style="border:none;border-top:1px solid #f0f5ff;margin:16px 0;">
-            <p style="color:#aabccc;font-size:11px;margin:0 0 6px;">If the button doesn't work, copy and paste this link into your browser:</p>
-            <p style="color:#1a9e8f;font-size:11px;word-break:break-all;margin:0;">${resetUrl}</p>
-            <hr style="border:none;border-top:1px solid #f0f5ff;margin:16px 0;">
-            <p style="color:#c0d0e0;font-size:11px;text-align:center;margin:0;">Gridminer &middot; Secure TRC20 Mining Network</p>
+            <p style="color:#c0d0e0;font-size:11px;text-align:center;margin:0;">If you didn't request this, you can safely ignore this email.</p>
           </div>
         </div>
       `,
     });
-    console.log(`✉️  Reset email sent to ${email} — messageId: ${info.messageId}`);
+    console.log(`✉️  Reset code sent to ${email} — messageId: ${info.messageId}`);
 
-    res.json({ message: 'If that email exists, a reset link has been sent.' });
+    res.json({ message: 'ok' });
   } catch (err) {
     console.error('forgot-password error:', err.message);
-    res.status(500).json({ message: 'Failed to send reset email. Please try again.' });
+    res.status(500).json({ message: 'Failed to send reset code. Please try again.' });
   }
 });
 
 /* ── POST /api/auth/reset-password ── */
 router.post('/reset-password', async (req, res) => {
   try {
-    const { token, password } = req.body;
-    if (!token || !password) return res.status(400).json({ message: 'Token and new password are required' });
+    const { email, code, password } = req.body;
+    if (!email || !code || !password) return res.status(400).json({ message: 'Email, code and new password are required' });
     if (password.length < 6) return res.status(400).json({ message: 'Password must be at least 6 characters' });
 
     const { rows } = await pool.query(
-      `SELECT pr.*, u.id AS uid FROM password_resets pr
+      `SELECT pr.id, pr.user_id FROM password_resets pr
        JOIN users u ON u.id = pr.user_id
-       WHERE pr.token = $1 AND pr.used = false AND pr.expires_at > NOW()`,
-      [token]
+       WHERE u.email = $1 AND pr.token = $2 AND pr.used = false AND pr.expires_at > NOW()`,
+      [email.toLowerCase(), code.trim()]
     );
 
-    if (!rows.length) return res.status(400).json({ message: 'This reset link is invalid or has expired.' });
+    if (!rows.length) return res.status(400).json({ message: 'Invalid or expired code. Please request a new one.' });
 
     const reset = rows[0];
     const hash = await bcrypt.hash(password, 10);

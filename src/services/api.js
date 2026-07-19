@@ -44,7 +44,7 @@ export const authAPI = {
   register:       (name, email, password)    => post('/auth/register',        { name, email, password }),
   me:             ()                         => get('/auth/me'),
   forgotPassword: (email)                    => post('/auth/forgot-password', { email }),
-  resetPassword:  (token, password)          => post('/auth/reset-password',  { token, password }),
+  resetPassword:  (email, code, password)     => post('/auth/reset-password',  { email, code, password }),
 };
 
 /* ─────────────────────────────────────────────────────────
