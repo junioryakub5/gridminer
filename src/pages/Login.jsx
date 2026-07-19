@@ -49,7 +49,10 @@ export default function Login() {
           </button>
           <p className="hint-text">Start here to understand how everything works</p>
           <button type="button" className="link-sm" onClick={() => navigate('/forgot-password')}>Forgot Password?</button>
-          <p className="link-sm">Don't have an account? <button type="button" className="link-accent" onClick={() => navigate('/register')}>Create Account</button></p>
+          <div className="register-row">
+            <span style={{ fontSize: 13, color: '#7aabcc' }}>Don't have an account?</span>
+            <button type="button" className="link-accent" onClick={() => navigate('/register')}>Create Account</button>
+          </div>
         </form>
       </div>
     </div>

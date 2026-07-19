@@ -166,8 +166,38 @@ input, textarea { outline: none; border: none; font-family: inherit; }
   display: flex; align-items: center; justify-content: center;
 }
 .user-app .hint-text { font-size: 11.5px; color: #7aabcc; text-align: center; }
-.user-app .link-sm   { font-size: 13px; color: #7aabcc; background: transparent; display: block; text-align: center; }
-.user-app .link-accent { color: #0d6e99; font-weight: 700; background: transparent; }
+
+.user-app .link-sm {
+  font-size: 13px; font-weight: 500; color: #4a7a9b;
+  background: transparent;
+  border: 1.5px solid #ccdcec;
+  border-radius: 10px;
+  padding: 9px 16px;
+  display: block; width: 100%; text-align: center;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.user-app .link-sm:hover {
+  background: rgba(13,110,153,0.06);
+  border-color: #0d6e99;
+  color: #0d6e99;
+}
+
+.user-app .link-accent {
+  font-size: 13px; font-weight: 700; color: white;
+  background: linear-gradient(135deg, #1a9e8f, #0d7ab5);
+  border: none; border-radius: 10px;
+  padding: 9px 16px;
+  display: inline-block; cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.user-app .link-accent:hover { opacity: 0.88; transform: translateY(-1px); }
+
+/* Wrapper for the "Don't have an account?" row */
+.user-app .register-row {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; flex-wrap: wrap;
+}
 
 /* =====================================================
    DASHBOARD
