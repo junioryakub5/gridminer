@@ -145,18 +145,33 @@ router.post('/forgot-password', async (req, res) => {
       from: `"Gridminer" <${process.env.GMAIL_USER}>`,
       to: email.toLowerCase(),
       subject: 'Reset your Gridminer password',
+      text: `Hi ${user.name},\n\nReset your Gridminer password by visiting this link:\n${resetUrl}\n\nThis link expires in 1 hour. If you didn't request this, ignore this email.\n\n— Gridminer`,
       html: `
-        <div style="font-family:'Inter',Arial,sans-serif;max-width:520px;margin:0 auto;background:#f4f8fc;padding:32px 16px;">
-          <div style="background:white;border-radius:16px;padding:36px 32px;box-shadow:0 4px 24px rgba(0,50,80,0.10);">
+        <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;background:#f4f8fc;padding:32px 16px;">
+          <div style="background:#ffffff;border-radius:16px;padding:36px 32px;box-shadow:0 4px 24px rgba(0,50,80,0.10);">
             <div style="text-align:center;margin-bottom:24px;">
               <span style="font-size:26px;font-weight:800;color:#1a2a3a;letter-spacing:-0.5px;">Grid<span style="color:#1a9e8f;">miner</span></span>
             </div>
             <h2 style="font-size:18px;font-weight:700;color:#1a2a3a;margin:0 0 8px;">Password Reset Request</h2>
-            <p style="color:#4a7a9b;font-size:14px;line-height:1.6;margin:0 0 24px;">Hi ${user.name}, we received a request to reset your password. Click the button below to choose a new one.</p>
-            <a href="${resetUrl}" style="display:block;text-align:center;background:linear-gradient(135deg,#1a9e8f,#0d7ab5);color:white;text-decoration:none;padding:14px 24px;border-radius:12px;font-size:15px;font-weight:700;margin-bottom:24px;">Reset Password</a>
-            <p style="color:#8aabcc;font-size:12px;line-height:1.6;margin:0;">This link expires in <strong>1 hour</strong>. If you didn't request this, you can safely ignore this email — your password won't change.</p>
-            <hr style="border:none;border-top:1px solid #f0f5ff;margin:24px 0;">
-            <p style="color:#c0d0e0;font-size:11px;text-align:center;margin:0;">Gridminer · Secure TRC20 Mining Network</p>
+            <p style="color:#4a7a9b;font-size:14px;line-height:1.6;margin:0 0 24px;">Hi ${user.name}, we received a request to reset your Gridminer password. Click the button below to set a new one.</p>
+
+            <!-- Bulletproof button -->
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto 24px;">
+              <tr>
+                <td style="border-radius:12px;background:linear-gradient(135deg,#1a9e8f,#0d7ab5);">
+                  <a href="${resetUrl}"
+                     target="_blank"
+                     style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:12px;font-family:Arial,sans-serif;">Reset Password</a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="color:#8aabcc;font-size:12px;line-height:1.6;margin:0 0 16px;">This link expires in <strong>1 hour</strong>. If you didn't request a reset, you can safely ignore this email.</p>
+            <hr style="border:none;border-top:1px solid #f0f5ff;margin:16px 0;">
+            <p style="color:#aabccc;font-size:11px;margin:0 0 6px;">If the button doesn't work, copy and paste this link into your browser:</p>
+            <p style="color:#1a9e8f;font-size:11px;word-break:break-all;margin:0;">${resetUrl}</p>
+            <hr style="border:none;border-top:1px solid #f0f5ff;margin:16px 0;">
+            <p style="color:#c0d0e0;font-size:11px;text-align:center;margin:0;">Gridminer &middot; Secure TRC20 Mining Network</p>
           </div>
         </div>
       `,
