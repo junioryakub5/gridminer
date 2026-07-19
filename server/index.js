@@ -19,15 +19,18 @@ const ALLOWED_ORIGINS = [
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:5175',
-  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
+  'https://gridminer.site',
+  'https://www.gridminer.site',
+  ...(process.env.FRONTEND_URL     ? [process.env.FRONTEND_URL]     : []),
   ...(process.env.FRONTEND_URL_ALT ? [process.env.FRONTEND_URL_ALT] : []),
 ];
 
-// Allow any *.vercel.app preview deployment
+// Allow any *.vercel.app preview OR *.gridminer.site
 const isAllowedOrigin = (origin) =>
   !origin ||
   ALLOWED_ORIGINS.includes(origin) ||
-  /^https:\/\/[a-z0-9-]+-[a-z0-9-]+\.vercel\.app$/.test(origin);
+  /^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(origin) ||
+  /^https:\/\/([a-z0-9-]+\.)?gridminer\.site$/.test(origin);
 
 app.use(cors({
   origin: (origin, callback) => {

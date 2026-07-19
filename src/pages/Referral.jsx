@@ -5,7 +5,7 @@ import { useApp } from '../context/AppContext';
 export default function Referral() {
   const navigate = useNavigate();
   const { user, showToast } = useApp();
-  const refLink = `https://gridminer.vercel.app/?ref=${user?.referralCode || 'GM123456'}`;
+  const refLink = `https://gridminer.site/?ref=${user?.referralCode || 'GM123456'}`;
 
   const copy = () => {
     navigator.clipboard.writeText(refLink).then(() => showToast('Referral link copied!'));
