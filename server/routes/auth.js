@@ -25,7 +25,7 @@ const safeUser = (u) => ({
 /* ── POST /api/auth/register ── */
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, referralCode: usedCode } = req.body;
 
     if (!name?.trim() || !email?.trim() || !password) {
       return res.status(400).json({ message: 'Name, email and password are required' });
@@ -42,14 +42,24 @@ router.post('/register', async (req, res) => {
       return res.status(409).json({ message: 'An account with this email already exists' });
     }
 
+    // Look up referrer (optional)
+    let referredBy = null;
+    if (usedCode?.trim()) {
+      const { rows: refRows } = await pool.query(
+        'SELECT id FROM users WHERE UPPER(referral_code) = $1',
+        [usedCode.trim().toUpperCase()]
+      );
+      if (refRows.length) referredBy = refRows[0].id;
+    }
+
     const passwordHash = await bcrypt.hash(password, 10);
     const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
     const { rows } = await pool.query(
-      `INSERT INTO users (name, email, password_hash, role, tier, balance, wallet_address, status, referral_code)
-       VALUES ($1, $2, $3, 'user', 1, 0, '', 'active', $4)
+      `INSERT INTO users (name, email, password_hash, role, tier, balance, wallet_address, status, referral_code, referred_by)
+       VALUES ($1, $2, $3, 'user', 1, 0, '', 'active', $4, $5)
        RETURNING *`,
-      [name.trim(), email.toLowerCase(), passwordHash, referralCode]
+      [name.trim(), email.toLowerCase(), passwordHash, referralCode, referredBy]
     );
 
     const user = rows[0];

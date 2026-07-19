@@ -40,8 +40,8 @@ const upload = (path, form)    => request('POST',   path, form, true);
    AUTH
 ───────────────────────────────────────────────────────── */
 export const authAPI = {
-  login:          (email, password)          => post('/auth/login',           { email, password }),
-  register:       (name, email, password)    => post('/auth/register',        { name, email, password }),
+  login:          (email, password)             => post('/auth/login',           { email, password }),
+  register:       (name, email, password, referralCode) => post('/auth/register', { name, email, password, referralCode }),
   me:             ()                         => get('/auth/me'),
   forgotPassword: (email)                    => post('/auth/forgot-password', { email }),
   resetPassword:  (email, code, password)     => post('/auth/reset-password',  { email, code, password }),

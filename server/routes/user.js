@@ -94,6 +94,20 @@ router.post('/mine', async (req, res) => {
       [user.id, earned]
     );
 
+    // ── 10% referral bonus to whoever referred this user ──
+    if (user.referred_by) {
+      const bonus = +(earned * 0.10).toFixed(4);
+      await client.query(
+        'UPDATE users SET balance = balance + $1 WHERE id = $2',
+        [bonus, user.referred_by]
+      );
+      await client.query(
+        `INSERT INTO transactions (user_id, type, label, amount, status)
+         VALUES ($1, 'referral', $2, $3, 'completed')`,
+        [user.referred_by, `Referral bonus from ${user.name}`, bonus]
+      );
+    }
+
     await client.query('COMMIT');
 
     const { rows: updated } = await pool.query('SELECT * FROM users WHERE id = $1', [user.id]);

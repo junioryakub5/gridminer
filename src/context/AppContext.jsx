@@ -104,8 +104,8 @@ export function AppProvider({ children }) {
     setStats(null);
   };
 
-  const register = async (name, email, password) => {
-    const data = await authAPI.register(name, email, password);
+  const register = async (name, email, password, referralCode) => {
+    const data = await authAPI.register(name, email, password, referralCode);
     setToken(data.token);
     setUser(data.user);
     setTransactions([]);

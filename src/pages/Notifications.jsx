@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Zap, TrendingUp, ArrowDownToLine, CheckCircle,
-  BellRing, CheckCheck, Info, Link2, ChevronDown, ChevronUp
+  BellRing, CheckCheck, Info, Link2, ChevronDown, ChevronUp, Gift
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import BottomNav from '../components/BottomNav';
@@ -13,6 +13,7 @@ const TYPE_META = {
   upgrades:    { Icon: TrendingUp,      color: '#d97706', bg: 'rgba(245,158,11,0.12)',  title: 'Account Upgraded'  },
   withdrawals: { Icon: ArrowDownToLine, color: '#7c3aed', bg: 'rgba(139,92,246,0.12)', title: 'Withdrawal'        },
   binding:     { Icon: Link2,           color: '#0d6e99', bg: 'rgba(13,110,160,0.12)', title: 'Wallet Bound'      },
+  referral:    { Icon: Gift,            color: '#e05cc0', bg: 'rgba(224,92,192,0.12)', title: 'Referral Bonus'    },
 };
 
 const STATUS_BADGE = {
