@@ -96,16 +96,24 @@ const router = Router();
 router.use(verifyToken);
 
 /* ── GET /api/user/verify-account?bank=GTB&account=0123456789 ── */
+const MOBILE_MONEY_BANKS = new Set(['MTN Mobile Money (MoMo)', 'Vodafone Cash', 'AirtelTigo Money']);
+const GHANA_BANKS = new Set(Object.keys(BANK_CODES).filter(k => !(/^\d/.test(BANK_CODES[k]))));
+
 router.get('/verify-account', async (req, res) => {
   const { bank, account } = req.query;
   if (!bank || !account) return res.status(400).json({ message: 'bank and account are required' });
   if (!/^\d{10}$/.test(account)) return res.status(400).json({ message: 'Account number must be 10 digits' });
 
+  // Mobile money / unsupported Ghana accounts — skip verification gracefully
+  if (MOBILE_MONEY_BANKS.has(bank) || GHANA_BANKS.has(bank)) {
+    return res.json({ accountName: null, skipped: true });
+  }
+
   const bankCode = BANK_CODES[bank];
-  if (!bankCode) return res.status(400).json({ message: 'Unsupported bank' });
+  if (!bankCode) return res.json({ accountName: null, skipped: true });
 
   const PAYSTACK_KEY = process.env.PAYSTACK_SECRET_KEY;
-  if (!PAYSTACK_KEY) return res.status(503).json({ message: 'Account verification not configured' });
+  if (!PAYSTACK_KEY) return res.json({ accountName: null, skipped: true }); // graceful — don't block UI
 
   try {
     const url = `https://api.paystack.co/bank/resolve?account_number=${account}&bank_code=${bankCode}`;
@@ -121,7 +129,7 @@ router.get('/verify-account', async (req, res) => {
     return res.json({ accountName: data.data.account_name });
   } catch (err) {
     console.error('verify-account error:', err.message);
-    return res.status(500).json({ message: 'Verification service unavailable' });
+    return res.json({ accountName: null, skipped: true }); // network error — don't block
   }
 });
 

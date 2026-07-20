@@ -101,6 +101,7 @@ export default function Withdraw() {
 
   /* ── account name lookup ── */
   const [acctName,      setAcctName]      = useState('');
+  const [acctSkipped,   setAcctSkipped]   = useState(false);
   const [acctVerifying, setAcctVerifying] = useState(false);
   const [acctError,     setAcctError]     = useState('');
   const verifyTimer = useRef(null);
@@ -108,20 +109,25 @@ export default function Withdraw() {
   useEffect(() => {
     setAcctName('');
     setAcctError('');
+    setAcctSkipped(false);
     if (selectedBank && /^\d{10}$/.test(accountNumber)) {
       setAcctVerifying(true);
       clearTimeout(verifyTimer.current);
       verifyTimer.current = setTimeout(async () => {
         try {
           const data = await userAPI.verifyAccount(selectedBank, accountNumber);
-          setAcctName(data.accountName);
+          if (data.skipped) {
+            setAcctSkipped(true);   // verification not available for this bank
+          } else {
+            setAcctName(data.accountName);
+          }
           setAcctError('');
         } catch (err) {
           setAcctError(err.message || 'Could not verify account');
         } finally {
           setAcctVerifying(false);
         }
-      }, 600); // debounce 600ms
+      }, 600);
     } else {
       setAcctVerifying(false);
     }
@@ -169,7 +175,8 @@ export default function Withdraw() {
       if (!selectedBank)                   return showToast('Please select a bank');
       if (!/^\d{10}$/.test(accountNumber)) return showToast('Account number must be 10 digits');
       if (acctVerifying)                   return showToast('Verifying account, please wait...');
-      if (!acctName)                       return showToast('Please wait for account verification');
+      // only block if verification ran AND failed (not skipped)
+      if (!acctName && !acctSkipped)       return showToast('Please wait for account verification');
     }
 
     setLoading(true);
@@ -187,6 +194,7 @@ export default function Withdraw() {
       setAccountNumber('');
       setAcctName('');
       setAcctError('');
+      setAcctSkipped(false);
     } catch (err) {
       showToast(err.message || 'Withdrawal failed');
     } finally {
@@ -395,6 +403,11 @@ export default function Withdraw() {
                   {acctName}
                 </div>
               )}
+              {acctSkipped && (
+                <div className="wd-acct-skipped">
+                  ℹ️ Auto-verify not available for this bank — please double-check your details
+                </div>
+              )}
               {acctError && (
                 <div className="wd-acct-error">
                   <XCircle size={13} />
@@ -435,7 +448,7 @@ export default function Withdraw() {
             <button
               className="wd-submit-btn"
               onClick={handleSubmit}
-              disabled={loading || !isValid || !selectedBank || accountNumber.length !== 10 || acctVerifying || !acctName}
+              disabled={loading || !isValid || !selectedBank || accountNumber.length !== 10 || acctVerifying || (!acctName && !acctSkipped)}
             >
               {loading
                 ? <><Loader2 size={16} className="spin" /> Processing…</>
