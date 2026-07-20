@@ -60,7 +60,8 @@ export const userAPI = {
     if (paymentMethod) form.append('paymentMethod', paymentMethod);
     return upload('/user/upgrade', form);
   },
-  withdraw:        (address, amount)            => post('/user/withdraw',  { address, amount }),
+  withdraw:        (address, amount, method, bankName, accountNumber) =>
+                     post('/user/withdraw', { address, amount, method, bankName, accountNumber }),
   updateProfile:   (name, email)                => put('/user/profile',    { name, email }),
   changePassword:  (currentPassword, newPassword) => put('/user/password', { currentPassword, newPassword }),
   saveWallet:      (address)                    => put('/user/wallet',     { address }),

@@ -195,12 +195,35 @@ router.post('/upgrade', upload.single('proof'), async (req, res) => {
 router.post('/withdraw', async (req, res) => {
   const client = await pool.connect();
   try {
-    const { address, amount } = req.body;
+    const { address, amount, method, bankName, accountNumber } = req.body;
+    const withdrawMethod = method || 'crypto'; // 'crypto' | 'bank'
     const withdrawAmount = parseFloat(amount);
 
-    if (!address?.trim()) return res.status(400).json({ message: 'Wallet address is required' });
-    if (isNaN(withdrawAmount) || withdrawAmount < 5) {
-      return res.status(400).json({ message: 'Minimum withdrawal is 5 USDT' });
+    const MIN_WITHDRAWAL = 10;
+    const MAX_WITHDRAWAL = 10000;
+    const CRYPTO_FEE_PERCENT = 0;   // 0% fee for crypto
+    const BANK_FEE_PERCENT   = 0;   // 0% fee for bank transfer (adjust if needed)
+    const USD_TO_NGN_RATE    = 1550; // exchange rate
+
+    // Shared validations
+    if (isNaN(withdrawAmount) || withdrawAmount < MIN_WITHDRAWAL) {
+      return res.status(400).json({ message: `Minimum withdrawal is $${MIN_WITHDRAWAL}.00 USD` });
+    }
+    if (withdrawAmount > MAX_WITHDRAWAL) {
+      return res.status(400).json({ message: `Maximum withdrawal is $${MAX_WITHDRAWAL.toLocaleString()}.00 USD per transaction` });
+    }
+
+    // Method-specific validations
+    if (withdrawMethod === 'crypto') {
+      if (!address?.trim()) return res.status(400).json({ message: 'TRC20 wallet address is required' });
+    } else if (withdrawMethod === 'bank') {
+      if (!bankName?.trim())      return res.status(400).json({ message: 'Bank name is required' });
+      if (!accountNumber?.trim()) return res.status(400).json({ message: 'Account number is required' });
+      if (!/^\d{10}$/.test(accountNumber.trim())) {
+        return res.status(400).json({ message: 'Account number must be exactly 10 digits' });
+      }
+    } else {
+      return res.status(400).json({ message: 'Invalid withdrawal method' });
     }
 
     await client.query('BEGIN');
@@ -213,20 +236,31 @@ router.post('/withdraw', async (req, res) => {
       return res.status(403).json({ message: 'Tier 1 users need 100 USDT balance to withdraw' });
     }
 
-    const fee = 1.00;
-    const totalDeducted = +(withdrawAmount + fee).toFixed(4);
+    // Fee calculation
+    const feePercent = withdrawMethod === 'crypto' ? CRYPTO_FEE_PERCENT : BANK_FEE_PERCENT;
+    const feeAmount  = +(withdrawAmount * feePercent / 100).toFixed(4);
+    const totalDeducted = +(withdrawAmount + feeAmount).toFixed(4);
 
     if (parseFloat(user.balance) < totalDeducted) {
       await client.query('ROLLBACK');
-      return res.status(400).json({ message: `Insufficient balance. Need ${totalDeducted} USDT (amount + 1 USDT fee)` });
+      return res.status(400).json({ message: `Insufficient balance. You need $${totalDeducted.toFixed(2)} USD` });
     }
 
     const newBalance = +(parseFloat(user.balance) - totalDeducted).toFixed(4);
     await client.query('UPDATE users SET balance = $1 WHERE id = $2', [newBalance, user.id]);
+
+    let label;
+    if (withdrawMethod === 'crypto') {
+      label = `Crypto withdrawal to ${address.trim().slice(0, 10)}...`;
+    } else {
+      const ngnAmount = +(withdrawAmount * USD_TO_NGN_RATE).toFixed(2);
+      label = `Bank transfer to ${bankName} ···${accountNumber.trim().slice(-4)} (${ngnAmount.toLocaleString()} NGN)`;
+    }
+
     await client.query(
       `INSERT INTO transactions (user_id, type, label, amount, status)
        VALUES ($1, 'withdrawals', $2, $3, 'pending')`,
-      [user.id, `Withdrawal to ${address.slice(0, 10)}...`, withdrawAmount]
+      [user.id, label, withdrawAmount]
     );
 
     await client.query('COMMIT');

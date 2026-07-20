@@ -156,8 +156,8 @@ export function AppProvider({ children }) {
     } catch { /* non-fatal */ }
   };
 
-  const submitWithdrawal = async (address, amount) => {
-    const data = await userAPI.withdraw(address, amount);
+  const submitWithdrawal = async (address, amount, method, bankName, accountNumber) => {
+    const data = await userAPI.withdraw(address, amount, method, bankName, accountNumber);
     setUser(prev => ({ ...prev, balance: data.balance }));
     showToast('Withdrawal request submitted!');
     try {
