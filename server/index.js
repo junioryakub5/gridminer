@@ -17,13 +17,17 @@ const PORT = process.env.PORT || 3005;
 
 const app = express();
 
-/* ── CORS — allow local dev + Vercel production ── */
+/* ── CORS — allow local dev + Vercel production + Capacitor Android ── */
 const ALLOWED_ORIGINS = [
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:5175',
   'https://gridminer.site',
   'https://www.gridminer.site',
+  // Capacitor Android WebView origins
+  'capacitor://localhost',
+  'https://localhost',
+  'http://localhost',
   ...(process.env.FRONTEND_URL     ? [process.env.FRONTEND_URL]     : []),
   ...(process.env.FRONTEND_URL_ALT ? [process.env.FRONTEND_URL_ALT] : []),
 ];
