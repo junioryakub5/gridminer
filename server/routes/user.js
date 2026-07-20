@@ -128,7 +128,9 @@ router.get('/verify-account', async (req, res) => {
       if (data.status === 'success' && data.data?.account_name) {
         return res.json({ accountName: data.data.account_name });
       }
-      return res.status(422).json({ message: data.message || 'Could not verify account' });
+      // Auth error or unsupported — skip gracefully, don't surface to user
+      console.warn('FLW verify skipped:', data.message);
+      return res.json({ accountName: null, skipped: true });
     } catch (err) {
       console.error('verify-account (FLW) error:', err.message);
       return res.json({ accountName: null, skipped: true });
