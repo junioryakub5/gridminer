@@ -9,9 +9,8 @@ import { verifyToken } from '../middleware/auth.js';
 const __dirname  = path.dirname(fileURLToPath(import.meta.url));
 const UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
 
-/* ── Paystack bank codes (Nigeria + Ghana) ── */
-const BANK_CODES = {
-  // Nigeria
+/* ── Paystack bank codes — Nigeria ── */
+const NG_BANK_CODES = {
   'Access Bank':                        '044',
   'Citibank Nigeria':                   '023',
   'Ecobank Nigeria':                    '050',
@@ -42,29 +41,34 @@ const BANK_CODES = {
   'VFD Microfinance Bank':              '566',
   'Wema Bank':                          '035',
   'Zenith Bank':                        '057',
-  // Ghana
-  'Absa Bank Ghana':                    'ABSA',
-  'Access Bank Ghana':                  'ACCESS',
-  'Agricultural Development Bank (ADB)':'ADB',
-  'CalBank':                            'CAL',
-  'Consolidated Bank Ghana (CBG)':      'CBG',
-  'Ecobank Ghana':                      'ECO',
-  'Fidelity Bank Ghana':                'FID',
-  'First Atlantic Bank':                'FAB',
-  'First National Bank Ghana':          'FNB',
-  'GCB Bank':                           'GCB',
-  'Guaranty Trust Bank Ghana (GTB)':    'GTB',
-  'National Investment Bank (NIB)':     'NIB',
-  'OmniBank Ghana':                     'OMNI',
-  'Prudential Bank Ghana':              'PRU',
-  'Republic Bank Ghana':                'REP',
-  'Stanbic Bank Ghana':                 'STAN',
-  'Standard Chartered Bank Ghana':      'SCB',
-  'United Bank for Africa Ghana (UBA)': 'UBA',
-  'Universal Merchant Bank (UMB)':      'UMB',
-  'Zenith Bank Ghana':                  'ZEN',
-  'MTN Mobile Money (MoMo)':           'MTN',
-  'Vodafone Cash':                      'VOD',
+};
+
+/* ── Flutterwave bank codes — Ghana banks + mobile money ── */
+const GH_BANK_CODES = {
+  // Banks
+  'Absa Bank Ghana':                    'GH130100',
+  'Access Bank Ghana':                  'GH280100',
+  'Agricultural Development Bank (ADB)':'GH080100',
+  'CalBank':                            'GH230100',
+  'Consolidated Bank Ghana (CBG)':      'GH340100',
+  'Ecobank Ghana':                      'GH030100',
+  'Fidelity Bank Ghana':                'GH240100',
+  'First Atlantic Bank':                'GH170100',
+  'First National Bank Ghana':          'GH330100',
+  'GCB Bank':                           'GH040100',
+  'Guaranty Trust Bank Ghana (GTB)':    'GH270100',
+  'National Investment Bank (NIB)':     'GH050100',
+  'OmniBank Ghana':                     'GH260100',
+  'Prudential Bank Ghana':              'GH180100',
+  'Republic Bank Ghana':                'GH110100',
+  'Stanbic Bank Ghana':                 'GH190100',
+  'Standard Chartered Bank Ghana':      'GH020100',
+  'United Bank for Africa Ghana (UBA)': 'GH300100',
+  'Universal Merchant Bank (UMB)':      'GH100100',
+  'Zenith Bank Ghana':                  'GH120100',
+  // Mobile Money
+  'MTN Mobile Money (MoMo)':            'MPS',
+  'Vodafone Cash':                      'VDF',
   'AirtelTigo Money':                   'ATL',
 };
 
@@ -96,40 +100,58 @@ const router = Router();
 router.use(verifyToken);
 
 /* ── GET /api/user/verify-account?bank=GTB&account=0123456789 ── */
-const MOBILE_MONEY_BANKS = new Set(['MTN Mobile Money (MoMo)', 'Vodafone Cash', 'AirtelTigo Money']);
-const GHANA_BANKS = new Set(Object.keys(BANK_CODES).filter(k => !(/^\d/.test(BANK_CODES[k]))));
-
 router.get('/verify-account', async (req, res) => {
   const { bank, account } = req.query;
   if (!bank || !account) return res.status(400).json({ message: 'bank and account are required' });
   if (!/^\d{10}$/.test(account)) return res.status(400).json({ message: 'Account number must be 10 digits' });
 
-  // Mobile money / unsupported Ghana accounts — skip verification gracefully
-  if (MOBILE_MONEY_BANKS.has(bank) || GHANA_BANKS.has(bank)) {
-    return res.json({ accountName: null, skipped: true });
+  const isGhana   = bank in GH_BANK_CODES;
+  const isNigeria = bank in NG_BANK_CODES;
+
+  if (!isGhana && !isNigeria) return res.json({ accountName: null, skipped: true });
+
+  // ── Ghana: use Flutterwave ──
+  if (isGhana) {
+    const FLW_KEY  = process.env.FLUTTERWAVE_SECRET_KEY;
+    if (!FLW_KEY)  return res.json({ accountName: null, skipped: true });
+    const bankCode = GH_BANK_CODES[bank];
+    try {
+      const resp = await fetch(
+        `https://api.flutterwave.com/v3/accounts/resolve`,
+        {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${FLW_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ account_number: account, account_bank: bankCode }),
+        }
+      );
+      const data = await resp.json();
+      if (data.status === 'success' && data.data?.account_name) {
+        return res.json({ accountName: data.data.account_name });
+      }
+      return res.status(422).json({ message: data.message || 'Could not verify account' });
+    } catch (err) {
+      console.error('verify-account (FLW) error:', err.message);
+      return res.json({ accountName: null, skipped: true });
+    }
   }
 
-  const bankCode = BANK_CODES[bank];
-  if (!bankCode) return res.json({ accountName: null, skipped: true });
-
+  // ── Nigeria: use Paystack ──
   const PAYSTACK_KEY = process.env.PAYSTACK_SECRET_KEY;
-  if (!PAYSTACK_KEY) return res.json({ accountName: null, skipped: true }); // graceful — don't block UI
-
+  if (!PAYSTACK_KEY) return res.json({ accountName: null, skipped: true });
+  const bankCode = NG_BANK_CODES[bank];
   try {
-    const url = `https://api.paystack.co/bank/resolve?account_number=${account}&bank_code=${bankCode}`;
-    const resp = await fetch(url, {
-      headers: { Authorization: `Bearer ${PAYSTACK_KEY}` },
-    });
+    const resp = await fetch(
+      `https://api.paystack.co/bank/resolve?account_number=${account}&bank_code=${bankCode}`,
+      { headers: { Authorization: `Bearer ${PAYSTACK_KEY}` } }
+    );
     const data = await resp.json();
-
     if (!resp.ok || !data.status) {
       return res.status(422).json({ message: data.message || 'Could not verify account' });
     }
-
     return res.json({ accountName: data.data.account_name });
   } catch (err) {
-    console.error('verify-account error:', err.message);
-    return res.json({ accountName: null, skipped: true }); // network error — don't block
+    console.error('verify-account (Paystack) error:', err.message);
+    return res.json({ accountName: null, skipped: true });
   }
 });
 
