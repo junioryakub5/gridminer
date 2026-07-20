@@ -800,6 +800,12 @@ input, textarea { outline: none; border: none; font-family: inherit; }
 .user-app .wd-bank-item:hover { background: #e8f4fd; }
 .user-app .wd-bank-item.selected { background: rgba(26,158,143,0.08); color: #1a9e8f; font-weight: 600; }
 .user-app .wd-bank-empty { padding: 14px; font-size: 13px; color: #8aabcc; text-align: center; }
+.user-app .wd-bank-group-header {
+  padding: 8px 14px 5px; font-size: 11px; font-weight: 800;
+  color: #8aabcc; letter-spacing: 0.5px;
+  background: #f6fbff; border-bottom: 1px solid #e8f3fc;
+  pointer-events: none; user-select: none;
+}
 
 /* Account number input */
 .user-app .wd-acct-input {

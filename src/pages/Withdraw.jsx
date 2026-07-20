@@ -7,17 +7,69 @@ import {
 import { useApp } from '../context/AppContext';
 import BottomNav from '../components/BottomNav';
 
-/* ── Nigerian banks list ── */
-const NIGERIAN_BANKS = [
-  'Access Bank', 'Citibank Nigeria', 'Ecobank Nigeria', 'Fidelity Bank',
-  'First Bank of Nigeria', 'First City Monument Bank (FCMB)', 'Globus Bank',
-  'Guaranty Trust Bank (GTB)', 'Heritage Bank', 'Keystone Bank',
-  'Kuda Bank', 'Lotus Bank', 'OPay', 'Opay Digital Services',
-  'Palmpay', 'Parallex Bank', 'Polaris Bank', 'PremiumTrust Bank',
-  'Providus Bank', 'Rand Merchant Bank', 'Stanbic IBTC Bank',
-  'Standard Chartered Bank', 'Sterling Bank', 'SunTrust Bank',
-  'Titan Trust Bank', 'Union Bank of Nigeria', 'United Bank for Africa (UBA)',
-  'Unity Bank', 'VFD Microfinance Bank', 'Wema Bank', 'Zenith Bank',
+/* ── Banks list (Nigeria + Ghana) ── */
+const BANKS = [
+  /* ── Nigeria ── */
+  { label: '🇳🇬 Nigerian Banks', disabled: true },
+  { label: 'Access Bank' },
+  { label: 'Citibank Nigeria' },
+  { label: 'Ecobank Nigeria' },
+  { label: 'Fidelity Bank' },
+  { label: 'First Bank of Nigeria' },
+  { label: 'First City Monument Bank (FCMB)' },
+  { label: 'Globus Bank' },
+  { label: 'Guaranty Trust Bank (GTB)' },
+  { label: 'Heritage Bank' },
+  { label: 'Keystone Bank' },
+  { label: 'Kuda Bank' },
+  { label: 'Lotus Bank' },
+  { label: 'OPay' },
+  { label: 'Parallex Bank' },
+  { label: 'Palmpay' },
+  { label: 'Polaris Bank' },
+  { label: 'PremiumTrust Bank' },
+  { label: 'Providus Bank' },
+  { label: 'Rand Merchant Bank' },
+  { label: 'Stanbic IBTC Bank' },
+  { label: 'Standard Chartered Bank Nigeria' },
+  { label: 'Sterling Bank' },
+  { label: 'SunTrust Bank' },
+  { label: 'Titan Trust Bank' },
+  { label: 'Union Bank of Nigeria' },
+  { label: 'United Bank for Africa (UBA)' },
+  { label: 'Unity Bank' },
+  { label: 'VFD Microfinance Bank' },
+  { label: 'Wema Bank' },
+  { label: 'Zenith Bank' },
+
+  /* ── Ghana ── */
+  { label: '🇬🇭 Ghanaian Banks', disabled: true },
+  { label: 'Absa Bank Ghana' },
+  { label: 'Access Bank Ghana' },
+  { label: 'Agricultural Development Bank (ADB)' },
+  { label: 'CalBank' },
+  { label: 'Consolidated Bank Ghana (CBG)' },
+  { label: 'Ecobank Ghana' },
+  { label: 'Fidelity Bank Ghana' },
+  { label: 'First Atlantic Bank' },
+  { label: 'First National Bank Ghana' },
+  { label: 'GCB Bank' },
+  { label: 'Guaranty Trust Bank Ghana (GTB)' },
+  { label: 'National Investment Bank (NIB)' },
+  { label: 'OmniBank Ghana' },
+  { label: 'Prudential Bank Ghana' },
+  { label: 'Republic Bank Ghana' },
+  { label: 'Société Générale Ghana' },
+  { label: 'Stanbic Bank Ghana' },
+  { label: 'Standard Chartered Bank Ghana' },
+  { label: 'United Bank for Africa Ghana (UBA)' },
+  { label: 'Universal Merchant Bank (UMB)' },
+  { label: 'Zenith Bank Ghana' },
+  /* Mobile Money */
+  { label: '📱 Ghana Mobile Money', disabled: true },
+  { label: 'MTN Mobile Money (MoMo)' },
+  { label: 'Vodafone Cash' },
+  { label: 'AirtelTigo Money' },
 ];
 
 const MIN_WITHDRAWAL  = 10;
@@ -65,9 +117,9 @@ export default function Withdraw() {
   };
 
   /* ── bank search ── */
-  const filteredBanks = NIGERIAN_BANKS.filter(b =>
-    b.toLowerCase().includes(bankQuery.toLowerCase())
-  );
+  const filteredBanks = bankQuery.trim()
+    ? BANKS.filter(b => !b.disabled && b.label.toLowerCase().includes(bankQuery.toLowerCase()))
+    : BANKS;
 
   /* ── submit ── */
   const handleSubmit = async () => {
@@ -266,17 +318,19 @@ export default function Withdraw() {
               </div>
               {bankOpen && (
                 <div className="wd-bank-list">
-                  {filteredBanks.length === 0
+                  {filteredBanks.filter(b => !b.disabled).length === 0
                     ? <div className="wd-bank-empty">No banks found</div>
-                    : filteredBanks.map(b => (
-                        <div
-                          key={b}
-                          className={`wd-bank-item ${selectedBank === b ? 'selected' : ''}`}
-                          onClick={() => { setSelectedBank(b); setBankQuery(b); setBankOpen(false); }}
-                        >
-                          {b}
-                        </div>
-                      ))
+                    : filteredBanks.map((b, i) =>
+                        b.disabled
+                          ? <div key={i} className="wd-bank-group-header">{b.label}</div>
+                          : <div
+                              key={b.label}
+                              className={`wd-bank-item ${selectedBank === b.label ? 'selected' : ''}`}
+                              onClick={() => { setSelectedBank(b.label); setBankQuery(b.label); setBankOpen(false); }}
+                            >
+                              {b.label}
+                            </div>
+                      )
                   }
                 </div>
               )}
