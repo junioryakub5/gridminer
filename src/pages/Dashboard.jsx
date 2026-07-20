@@ -219,23 +219,43 @@ export default function Dashboard() {
           <CreditCard size={16} color="#0d6e99" />
           <span className="sc-title">Bind Wallet Address</span>
         </div>
-        <div className="form-group">
-          <label className="form-label">TRC20 Address</label>
-          <div className="field-wrap">
-            <Lock size={14} color="#8aabcc" className="field-prefix-icon" />
-            <input
-              className="field field-with-icon"
-              placeholder="Enter your TRC20 wallet address"
-              value={walletEdit ? walletInput : (user?.walletAddress || '')}
-              onChange={e => { setWalletInput(e.target.value); setWalletEdit(true); }}
-              readOnly={!walletEdit && !!user?.walletAddress}
-            />
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn-outline" onClick={() => { setWalletEdit(true); setWalletInput(user?.walletAddress || ''); }}>Edit</button>
-          <button className="btn-solid" onClick={handleSaveWallet}>Save Address</button>
-        </div>
+
+        {!walletEdit ? (
+          <>
+            <div className="form-group">
+              <label className="form-label">TRC20 Address</label>
+              <div className="field-wrap">
+                <Lock size={14} color="#8aabcc" className="field-prefix-icon" />
+                <div className="field field-with-icon" style={{ display:'flex', alignItems:'center', color: user?.walletAddress ? '#e0edf6' : '#8aabcc', fontSize: 13, wordBreak:'break-all' }}>
+                  {user?.walletAddress || 'No wallet address bound yet'}
+                </div>
+              </div>
+            </div>
+            <button className="btn-solid" onClick={() => { setWalletInput(user?.walletAddress || ''); setWalletEdit(true); }}>
+              {user?.walletAddress ? 'Edit Address' : 'Bind Wallet'}
+            </button>
+          </>
+        ) : (
+          <>
+            <div className="form-group">
+              <label className="form-label">TRC20 Address</label>
+              <div className="field-wrap">
+                <Lock size={14} color="#1a9e8f" className="field-prefix-icon" />
+                <input
+                  className="field field-with-icon"
+                  placeholder="Enter your TRC20 wallet address"
+                  value={walletInput}
+                  onChange={e => setWalletInput(e.target.value)}
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn-outline" onClick={() => setWalletEdit(false)}>Cancel</button>
+              <button className="btn-solid" onClick={handleSaveWallet}>Save Address</button>
+            </div>
+          </>
+        )}
       </div>
 
       {/* ── How it works ── */}
