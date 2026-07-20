@@ -1,9 +1,18 @@
 /* ─────────────────────────────────────────────────────────
-   API Service — Gridminer
-   All fetch calls to the Express backend go through here.
+   Detect if running inside Capacitor Android WebView.
+   In that context, relative URLs like /api resolve to
+   capacitor://localhost/api which never reaches the server.
+   We must use the absolute production URL instead.
 ───────────────────────────────────────────────────────── */
+const isCapacitor =
+  window.location.protocol === 'capacitor:' ||
+  (window.location.protocol === 'https:' && window.location.hostname === 'localhost') ||
+  (window.location.protocol === 'http:'  && window.location.hostname === 'localhost' && !!window.Capacitor);
 
-const BASE = '/api';
+const BASE = isCapacitor
+  ? 'https://gridminer.site/api'
+  : '/api';
+
 
 /* ── Token helpers ── */
 export const getToken  = ()    => localStorage.getItem('cm_token');
