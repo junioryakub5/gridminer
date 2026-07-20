@@ -69,7 +69,7 @@ export default function Upgrade() {
                 <div className="tier-price-block">
                   <span className="tier-price-usd">${t.priceUSD?.toFixed(2)} USD</span>
                   {t.priceNGN > 0 && <span className="tier-price-ngn">≈ ₦{t.priceNGN?.toLocaleString()}.00</span>}
-                  {t.priceGHS > 0 && <span className="tier-price-ghs">≈ GHS {t.priceGHS?.toLocaleString()}.00</span>}
+                  {t.priceGHS > 0 && <span className="tier-price-ghs">≈ ₵{t.priceGHS?.toLocaleString()}.00</span>}
                 </div>
               </div>
 

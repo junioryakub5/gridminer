@@ -7,6 +7,28 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 import BottomNav from '../components/BottomNav';
 
+/* ── Local-currency pill that alternates NGN ↔ GHS every 4 s ── */
+function LocalCurrencyPill({ balance }) {
+  const NGN_RATE = 1600;
+  const GHS_RATE = 15.2; // ~1 USD = 15.2 GHS (update as needed)
+  const [showGHS, setShowGHS] = useState(false);
+
+  useEffect(() => {
+    const t = setInterval(() => setShowGHS(v => !v), 4000);
+    return () => clearInterval(t);
+  }, []);
+
+  return showGHS ? (
+    <div className="bc-ngn-pill bc-ghs-pill" key="ghs">
+      ≈ ₵{(balance * GHS_RATE).toLocaleString('en-GH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+    </div>
+  ) : (
+    <div className="bc-ngn-pill" key="ngn">
+      ≈ ₦{(balance * NGN_RATE).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+    </div>
+  );
+}
+
 /* ── Coin sound via Web Audio API (no file needed) ── */
 function playCoinSound() {
   try {
@@ -108,7 +130,6 @@ export default function Dashboard() {
   const [walletInput, setWalletInput] = useState(user?.walletAddress || '');
   const [walletEdit, setWalletEdit]   = useState(false);
 
-  const NGN_RATE = 1600;
   const balance  = user?.balance ?? 0;
 
   const handleMine = async () => {
@@ -165,9 +186,7 @@ export default function Dashboard() {
             <div className="bc-amount">
               {balance.toFixed(2)} <span className="bc-unit">USDT</span>
             </div>
-            <div className="bc-ngn-pill">
-              ≈ ₦{(balance * NGN_RATE).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
+            <LocalCurrencyPill balance={balance} />
           </div>
           <MineClock
             lastMinedAt={user?.lastMinedAt}

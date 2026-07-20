@@ -76,7 +76,21 @@ const BANKS = [
 const MIN_WITHDRAWAL  = 10;
 const MAX_WITHDRAWAL  = 10000;
 const USD_TO_NGN_RATE = 1550;
+const USD_TO_GHS_RATE = 15.2;
 const FEE_PERCENT     = 0;
+
+/* ── Detect if a selected bank is Ghanaian ── */
+const GHANA_BANK_LABELS = [
+  'Absa Bank Ghana', 'Access Bank Ghana', 'Agricultural Development Bank',
+  'CalBank', 'Consolidated Bank Ghana', 'Ecobank Ghana', 'Fidelity Bank Ghana',
+  'First Atlantic Bank', 'First National Bank Ghana', 'GCB Bank',
+  'Guaranty Trust Bank Ghana', 'National Investment Bank', 'OmniBank Ghana',
+  'Prudential Bank Ghana', 'Republic Bank Ghana', 'Société Générale Ghana',
+  'Stanbic Bank Ghana', 'Standard Chartered Bank Ghana',
+  'United Bank for Africa Ghana', 'Universal Merchant Bank', 'Zenith Bank Ghana',
+  'MTN Mobile Money', 'Vodafone Cash', 'AirtelTigo Money',
+];
+const isGhanaBank = (name) => GHANA_BANK_LABELS.some(b => name?.startsWith(b));
 
 export default function Withdraw() {
   const { user, submitWithdrawal, showToast } = useApp();
@@ -139,8 +153,13 @@ export default function Withdraw() {
   const parsedAmt   = parseFloat(amount) || 0;
   const feeAmt      = +(parsedAmt * FEE_PERCENT / 100).toFixed(2);
   const youReceive  = +(parsedAmt - feeAmt).toFixed(2);
-  const ngnAmount   = +(parsedAmt * USD_TO_NGN_RATE).toFixed(2);
-  const ngnReceive  = +(youReceive * USD_TO_NGN_RATE).toFixed(2);
+  const isGhana     = isGhanaBank(selectedBank);
+  const localRate   = isGhana ? USD_TO_GHS_RATE : USD_TO_NGN_RATE;
+  const localSymbol = isGhana ? '₵' : '₦';
+  const localCode   = isGhana ? 'GHS' : 'NGN';
+  const localAmount  = +(parsedAmt   * localRate).toFixed(2);
+  const localReceive = +(youReceive  * localRate).toFixed(2);
+  const localFee     = +(feeAmt      * localRate).toFixed(2);
   const isValid     = parsedAmt >= MIN_WITHDRAWAL && parsedAmt <= MAX_WITHDRAWAL && parsedAmt <= balance;
 
   /* ── tier restriction ── */
@@ -431,15 +450,15 @@ export default function Withdraw() {
                 <div className="wd-summary-title"><CreditCard size={15} /> Transaction Summary</div>
                 <div className="wd-summary-row">
                   <span>Amount</span>
-                  <span>{parsedAmt.toFixed(2)} USD = {ngnAmount.toLocaleString()} NGN</span>
+                  <span>{parsedAmt.toFixed(2)} USD = {localSymbol}{localAmount.toLocaleString()} {localCode}</span>
                 </div>
                 <div className="wd-summary-row">
                   <span>Transfer Fee</span>
-                  <span>{FEE_PERCENT}% = {(feeAmt * USD_TO_NGN_RATE).toFixed(2)} NGN</span>
+                  <span>{FEE_PERCENT}% = {localSymbol}{localFee.toFixed(2)} {localCode}</span>
                 </div>
                 <div className="wd-summary-row total">
                   <span>Total Deduction</span>
-                  <span>{ngnReceive.toLocaleString()} NGN</span>
+                  <span>{localSymbol}{localReceive.toLocaleString()} {localCode}</span>
                 </div>
               </div>
             )}

@@ -27,7 +27,7 @@ export default function Deposit() {
     ? `${selectedTier?.priceUSD?.toFixed(2) || '0.00'} USDT`
     : isNaira
     ? `₦${selectedTier?.priceNGN?.toLocaleString() || '0'}.00`
-    : `GHS ${selectedTier?.priceGHS?.toLocaleString() || '0'}.00`;
+    : `₵${selectedTier?.priceGHS?.toLocaleString() || '0'}.00`;
 
   const handleFile = (e) => {
     const f = e.target.files[0];
