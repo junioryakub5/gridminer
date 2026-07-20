@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ChevronLeft, AlertCircle, Loader2, Wallet, Building2,
-  ChevronDown, ShieldCheck, Info, CreditCard, Search,
+  ChevronDown, ShieldCheck, CreditCard, Search, CheckCircle2, XCircle,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import BottomNav from '../components/BottomNav';
+import { userAPI } from '../services/api';
 
 /* ── Banks list (Nigeria + Ghana) ── */
 const BANKS = [
@@ -98,6 +99,35 @@ export default function Withdraw() {
   const [bankOpen,      setBankOpen]      = useState(false);
   const [accountNumber, setAccountNumber] = useState('');
 
+  /* ── account name lookup ── */
+  const [acctName,      setAcctName]      = useState('');
+  const [acctVerifying, setAcctVerifying] = useState(false);
+  const [acctError,     setAcctError]     = useState('');
+  const verifyTimer = useRef(null);
+
+  useEffect(() => {
+    setAcctName('');
+    setAcctError('');
+    if (selectedBank && /^\d{10}$/.test(accountNumber)) {
+      setAcctVerifying(true);
+      clearTimeout(verifyTimer.current);
+      verifyTimer.current = setTimeout(async () => {
+        try {
+          const data = await userAPI.verifyAccount(selectedBank, accountNumber);
+          setAcctName(data.accountName);
+          setAcctError('');
+        } catch (err) {
+          setAcctError(err.message || 'Could not verify account');
+        } finally {
+          setAcctVerifying(false);
+        }
+      }, 600); // debounce 600ms
+    } else {
+      setAcctVerifying(false);
+    }
+    return () => clearTimeout(verifyTimer.current);
+  }, [selectedBank, accountNumber]);
+
   /* ── computed ── */
   const balance     = parseFloat(user?.balance || 0);
   const parsedAmt   = parseFloat(amount) || 0;
@@ -136,8 +166,10 @@ export default function Withdraw() {
     if (tab === 'crypto') {
       if (!walletBound) return showToast('Please bind your TRC20 wallet address first');
     } else {
-      if (!selectedBank)               return showToast('Please select a bank');
+      if (!selectedBank)                   return showToast('Please select a bank');
       if (!/^\d{10}$/.test(accountNumber)) return showToast('Account number must be 10 digits');
+      if (acctVerifying)                   return showToast('Verifying account, please wait...');
+      if (!acctName)                       return showToast('Please wait for account verification');
     }
 
     setLoading(true);
@@ -151,7 +183,10 @@ export default function Withdraw() {
       );
       setAmount('');
       setSelectedBank('');
+      setBankQuery('');
       setAccountNumber('');
+      setAcctName('');
+      setAcctError('');
     } catch (err) {
       showToast(err.message || 'Withdrawal failed');
     } finally {
@@ -349,7 +384,23 @@ export default function Withdraw() {
                   value={accountNumber}
                   onChange={e => setAccountNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                 />
+                {acctVerifying && <Loader2 size={16} className="spin" style={{ color: '#8aabcc', flexShrink: 0 }} />}
+                {!acctVerifying && acctName && <CheckCircle2 size={16} style={{ color: '#1a9e8f', flexShrink: 0 }} />}
+                {!acctVerifying && acctError && <XCircle size={16} style={{ color: '#ef4444', flexShrink: 0 }} />}
               </div>
+              {/* Resolved account name */}
+              {acctName && (
+                <div className="wd-acct-name">
+                  <CheckCircle2 size={13} />
+                  {acctName}
+                </div>
+              )}
+              {acctError && (
+                <div className="wd-acct-error">
+                  <XCircle size={13} />
+                  {acctError}
+                </div>
+              )}
             </div>
 
             {/* Bank transfer info */}
@@ -384,7 +435,7 @@ export default function Withdraw() {
             <button
               className="wd-submit-btn"
               onClick={handleSubmit}
-              disabled={loading || !isValid || !selectedBank || accountNumber.length !== 10}
+              disabled={loading || !isValid || !selectedBank || accountNumber.length !== 10 || acctVerifying || !acctName}
             >
               {loading
                 ? <><Loader2 size={16} className="spin" /> Processing…</>

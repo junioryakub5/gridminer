@@ -9,6 +9,65 @@ import { verifyToken } from '../middleware/auth.js';
 const __dirname  = path.dirname(fileURLToPath(import.meta.url));
 const UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
 
+/* ── Paystack bank codes (Nigeria + Ghana) ── */
+const BANK_CODES = {
+  // Nigeria
+  'Access Bank':                        '044',
+  'Citibank Nigeria':                   '023',
+  'Ecobank Nigeria':                    '050',
+  'Fidelity Bank':                      '070',
+  'First Bank of Nigeria':              '011',
+  'First City Monument Bank (FCMB)':    '214',
+  'Globus Bank':                        '00103',
+  'Guaranty Trust Bank (GTB)':          '058',
+  'Heritage Bank':                      '030',
+  'Keystone Bank':                      '082',
+  'Kuda Bank':                          '50211',
+  'Lotus Bank':                         '303',
+  'OPay':                               '999992',
+  'Parallex Bank':                      '526',
+  'Palmpay':                            '999991',
+  'Polaris Bank':                       '076',
+  'PremiumTrust Bank':                  '105',
+  'Providus Bank':                      '101',
+  'Rand Merchant Bank':                 '502',
+  'Stanbic IBTC Bank':                  '221',
+  'Standard Chartered Bank Nigeria':    '068',
+  'Sterling Bank':                      '232',
+  'SunTrust Bank':                      '100',
+  'Titan Trust Bank':                   '102',
+  'Union Bank of Nigeria':              '032',
+  'United Bank for Africa (UBA)':       '033',
+  'Unity Bank':                         '215',
+  'VFD Microfinance Bank':              '566',
+  'Wema Bank':                          '035',
+  'Zenith Bank':                        '057',
+  // Ghana
+  'Absa Bank Ghana':                    'ABSA',
+  'Access Bank Ghana':                  'ACCESS',
+  'Agricultural Development Bank (ADB)':'ADB',
+  'CalBank':                            'CAL',
+  'Consolidated Bank Ghana (CBG)':      'CBG',
+  'Ecobank Ghana':                      'ECO',
+  'Fidelity Bank Ghana':                'FID',
+  'First Atlantic Bank':                'FAB',
+  'First National Bank Ghana':          'FNB',
+  'GCB Bank':                           'GCB',
+  'Guaranty Trust Bank Ghana (GTB)':    'GTB',
+  'National Investment Bank (NIB)':     'NIB',
+  'OmniBank Ghana':                     'OMNI',
+  'Prudential Bank Ghana':              'PRU',
+  'Republic Bank Ghana':                'REP',
+  'Stanbic Bank Ghana':                 'STAN',
+  'Standard Chartered Bank Ghana':      'SCB',
+  'United Bank for Africa Ghana (UBA)': 'UBA',
+  'Universal Merchant Bank (UMB)':      'UMB',
+  'Zenith Bank Ghana':                  'ZEN',
+  'MTN Mobile Money (MoMo)':           'MTN',
+  'Vodafone Cash':                      'VOD',
+  'AirtelTigo Money':                   'ATL',
+};
+
 const storage = multer.diskStorage({
   destination: UPLOADS_DIR,
   filename: (req, file, cb) => {
@@ -35,6 +94,36 @@ const safeUser = (u) => ({
 
 const router = Router();
 router.use(verifyToken);
+
+/* ── GET /api/user/verify-account?bank=GTB&account=0123456789 ── */
+router.get('/verify-account', async (req, res) => {
+  const { bank, account } = req.query;
+  if (!bank || !account) return res.status(400).json({ message: 'bank and account are required' });
+  if (!/^\d{10}$/.test(account)) return res.status(400).json({ message: 'Account number must be 10 digits' });
+
+  const bankCode = BANK_CODES[bank];
+  if (!bankCode) return res.status(400).json({ message: 'Unsupported bank' });
+
+  const PAYSTACK_KEY = process.env.PAYSTACK_SECRET_KEY;
+  if (!PAYSTACK_KEY) return res.status(503).json({ message: 'Account verification not configured' });
+
+  try {
+    const url = `https://api.paystack.co/bank/resolve?account_number=${account}&bank_code=${bankCode}`;
+    const resp = await fetch(url, {
+      headers: { Authorization: `Bearer ${PAYSTACK_KEY}` },
+    });
+    const data = await resp.json();
+
+    if (!resp.ok || !data.status) {
+      return res.status(422).json({ message: data.message || 'Could not verify account' });
+    }
+
+    return res.json({ accountName: data.data.account_name });
+  } catch (err) {
+    console.error('verify-account error:', err.message);
+    return res.status(500).json({ message: 'Verification service unavailable' });
+  }
+});
 
 /* ── GET /api/user/transactions ── */
 router.get('/transactions', async (req, res) => {

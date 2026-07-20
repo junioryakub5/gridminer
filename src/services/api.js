@@ -66,6 +66,7 @@ export const userAPI = {
   changePassword:  (currentPassword, newPassword) => put('/user/password', { currentPassword, newPassword }),
   saveWallet:      (address)                    => put('/user/wallet',     { address }),
   referralStats:   ()                           => get('/user/referral-stats'),
+  verifyAccount:   (bank, account)              => get(`/user/verify-account?bank=${encodeURIComponent(bank)}&account=${encodeURIComponent(account)}`),
 };
 
 /* ─────────────────────────────────────────────────────────
