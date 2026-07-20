@@ -806,6 +806,29 @@ input, textarea { outline: none; border: none; font-family: inherit; }
 .user-app .rs-label { font-size: 12px; color: #7aabcc; margin-top: 4px; }
 .user-app .rs-divider { width: 1px; height: 40px; background: #e8f0f7; }
 
+/* How it works */
+.user-app .ref-how-it-works  { margin-top: 20px; background: white; border-radius: 14px; padding: 16px 20px; box-shadow: 0 1px 5px rgba(0,0,0,0.05); text-align: left; }
+.user-app .ref-how-title     { font-size: 13px; font-weight: 700; color: #1a2a3a; margin-bottom: 14px; }
+.user-app .ref-steps         { display: flex; flex-direction: column; gap: 14px; }
+.user-app .ref-step          { display: flex; align-items: flex-start; gap: 14px; }
+.user-app .ref-step-icon     { width: 36px; height: 36px; border-radius: 10px; background: rgba(26,158,143,0.1); color: #1a9e8f; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.user-app .ref-step-label    { font-size: 13px; font-weight: 700; color: #1a2a3a; }
+.user-app .ref-step-desc     { font-size: 12px; color: #7aabcc; margin-top: 2px; }
+
+/* Friends list */
+.user-app .ref-friends-list  { margin-top: 16px; background: white; border-radius: 14px; padding: 16px; box-shadow: 0 1px 5px rgba(0,0,0,0.05); text-align: left; }
+.user-app .ref-friends-title { font-size: 13px; font-weight: 700; color: #1a2a3a; margin-bottom: 12px; }
+.user-app .ref-friend-row    { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #f0f7ff; }
+.user-app .ref-friend-row:last-child { border-bottom: none; }
+.user-app .ref-friend-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg,#1a9e8f,#0d6e99); color: white; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.user-app .ref-friend-info   { flex: 1; }
+.user-app .ref-friend-name   { font-size: 13px; font-weight: 600; color: #1a2a3a; }
+.user-app .ref-friend-date   { font-size: 11px; color: #8aabcc; margin-top: 1px; }
+.user-app .ref-friend-earned { font-size: 12px; font-weight: 700; color: #1a9e8f; display: flex; align-items: center; }
+
+/* Empty state */
+.user-app .ref-empty { margin-top: 20px; font-size: 13px; color: #8aabcc; text-align: center; padding: 16px; }
+
 /* =====================================================
    NOTIFICATIONS (redesigned)
 ===================================================== */

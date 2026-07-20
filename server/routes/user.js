@@ -54,6 +54,46 @@ router.get('/transactions', async (req, res) => {
   }
 });
 
+/* ── GET /api/user/referral-stats ── */
+router.get('/referral-stats', async (req, res) => {
+  try {
+    // Total friends referred
+    const { rows: friends } = await pool.query(
+      `SELECT u.id, u.name, u.created_at,
+              COALESCE(SUM(t.amount), 0) AS bonus_generated
+       FROM users u
+       LEFT JOIN transactions t
+         ON t.user_id = $1 AND t.type = 'referral'
+         AND t.label LIKE '%' || u.name || '%'
+       WHERE u.referred_by = $1
+       GROUP BY u.id, u.name, u.created_at
+       ORDER BY u.created_at DESC`,
+      [req.user.id]
+    );
+
+    // Total referral earnings (all referral-type transactions for this user)
+    const { rows: earningsRow } = await pool.query(
+      `SELECT COALESCE(SUM(amount), 0) AS total
+       FROM transactions WHERE user_id = $1 AND type = 'referral'`,
+      [req.user.id]
+    );
+
+    res.json({
+      totalReferrals: friends.length,
+      totalEarnings:  parseFloat(earningsRow[0].total),
+      friends: friends.map(f => ({
+        name:           f.name,
+        joinedAt:       new Date(f.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        bonusGenerated: parseFloat(f.bonus_generated),
+      })),
+    });
+  } catch (err) {
+    console.error('GET /user/referral-stats:', err.message);
+    res.status(500).json({ message: 'Failed to fetch referral stats' });
+  }
+});
+
+
 /* ── POST /api/user/mine ── */
 router.post('/mine', async (req, res) => {
   const client = await pool.connect();

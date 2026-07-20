@@ -64,6 +64,7 @@ export const userAPI = {
   updateProfile:   (name, email)                => put('/user/profile',    { name, email }),
   changePassword:  (currentPassword, newPassword) => put('/user/password', { currentPassword, newPassword }),
   saveWallet:      (address)                    => put('/user/wallet',     { address }),
+  referralStats:   ()                           => get('/user/referral-stats'),
 };
 
 /* ─────────────────────────────────────────────────────────
