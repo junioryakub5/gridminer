@@ -116,12 +116,12 @@ function ReviewModal({ txId, onClose, onApprove, onReject }) {
               {/* Upgrade or Withdrawal Details */}
               {detail.type === 'withdrawals' ? (
                 <Section icon={<Wallet size={15} color="#ef4444" />} title="Withdrawal Details" color="#ef444410">
-                  <Row label="Amount Requested" value={`$${parseFloat(detail.amount).toFixed(2)} USDT`} bold />
-                  <Row label="Fee"              value="$1.00 USDT" />
-                  <Row label="Net to Send"      value={detail.withdrawalNet != null ? `$${detail.withdrawalNet.toFixed(2)} USDT` : '—'} bold chip chipColor="#ef4444" />
+                  <Row label="Amount Requested" value={`$${parseFloat(detail.amount).toFixed(2)} USD`} bold />
+                  <Row label="Fee"              value="0% = $0.00" />
+                  <Row label="Net to Send"      value={`$${parseFloat(detail.amount).toFixed(2)} USD`} bold chip chipColor="#ef4444" />
                   <Row label="Destination"      value={
                     <span style={{ fontFamily: 'monospace', fontSize: 11, wordBreak: 'break-all' }}>
-                      {detail.withdrawalAddress || detail.userWallet || '—'}
+                      {detail.withdrawalLabel || detail.withdrawalAddress || detail.userWallet || '—'}
                     </span>
                   } />
                   <Row label="Submitted" value={detail.date || '—'} />

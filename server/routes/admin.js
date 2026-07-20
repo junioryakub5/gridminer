@@ -235,8 +235,9 @@ router.get('/transactions/:id', async (req, res) => {
       tierPriceNgn: tierData ? parseFloat(tierData.price_ngn) : null,
       tierPriceGhs: tierData ? parseFloat(tierData.price_ghs) : null,
       withdrawalAddress: tx.user_wallet || null,
-      withdrawalFee: tx.type === 'withdrawals' ? 1.00 : null,
-      withdrawalNet: tx.type === 'withdrawals' ? +(parseFloat(tx.amount) - 1.00).toFixed(2) : null,
+      withdrawalFee: tx.type === 'withdrawals' ? 0 : null,
+      withdrawalNet: tx.type === 'withdrawals' ? parseFloat(tx.amount) : null,
+      withdrawalLabel: tx.type === 'withdrawals' ? tx.label : null,
     });
   } catch (err) {
     console.error('GET /admin/transactions/:id:', err.message);
@@ -301,8 +302,7 @@ router.patch('/transactions/:id/reject', async (req, res) => {
     await client.query('BEGIN');
 
     if (tx.type === 'withdrawals') {
-      const fee = 1.00;
-      const refundAmount = +(parseFloat(tx.amount) + fee).toFixed(4);
+      const refundAmount = parseFloat(tx.amount); // 0% fee — refund exact amount
       await client.query("UPDATE transactions SET status = 'failed' WHERE id = $1", [txId]);
       await client.query(
         'UPDATE users SET balance = balance + $1 WHERE id = $2',
