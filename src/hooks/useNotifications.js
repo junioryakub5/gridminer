@@ -7,6 +7,7 @@ const N = {
   MINE_READY:    1001,
   MINE_SOON:     1002,
   WELCOME:       1003,
+  TX_BASE:       2000, // 2000 + index for transaction status change notifications
 };
 
 const isNative = () => Capacitor.isNativePlatform();
@@ -32,7 +33,6 @@ export async function initNotifications() {
 export async function scheduleMineNotifications(lastMinedAt) {
   if (!isNative()) return;
   try {
-    // Always cancel stale reminders first
     await LocalNotifications.cancel({
       notifications: [{ id: N.MINE_READY }, { id: N.MINE_SOON }],
     }).catch(() => {});
@@ -40,15 +40,14 @@ export async function scheduleMineNotifications(lastMinedAt) {
     if (!lastMinedAt) return;
 
     const minedAt  = new Date(lastMinedAt).getTime();
-    const readyAt  = minedAt + 24 * 60 * 60 * 1000;          // +24 h
-    const soonAt   = minedAt + 20 * 60 * 60 * 1000;          // +20 h (4 h warning)
+    const readyAt  = minedAt + 24 * 60 * 60 * 1000;
+    const soonAt   = minedAt + 20 * 60 * 60 * 1000;
     const now      = Date.now();
 
-    if (readyAt <= now) return; // Mine is already available — nothing to schedule
+    if (readyAt <= now) return;
 
     const toSchedule = [];
 
-    // "Mine Ready" at exactly 24 h
     toSchedule.push({
       id:    N.MINE_READY,
       title: '⛏️ Mine Ready!',
@@ -60,15 +59,14 @@ export async function scheduleMineNotifications(lastMinedAt) {
       extra: { route: '/dashboard' },
     });
 
-    // "Mining Soon" at 20 h (only if still in the future)
     if (soonAt > now) {
       toSchedule.push({
         id:    N.MINE_SOON,
-        smallIcon: 'ic_stat_icon',
         title: '⏰ Mining Soon!',
         body:  'Your mine unlocks in 4 hours. Come back and collect your reward!',
         schedule: { at: new Date(soonAt), allowWhileIdle: true },
         sound: null,
+        smallIcon: 'ic_stat_icon',
         iconColor: '#1a9e8f',
         extra: { route: '/dashboard' },
       });
@@ -85,6 +83,98 @@ export async function cancelMineNotifications() {
   await LocalNotifications.cancel({
     notifications: [{ id: N.MINE_READY }, { id: N.MINE_SOON }],
   }).catch(() => {});
+}
+
+/* ─────────────────────────────────────────────────────────
+   Transaction status change notifications
+   Call this every time transactions are loaded — it
+   compares against the last-known statuses stored in
+   localStorage and fires a notification for any change.
+───────────────────────────────────────────────────────── */
+const STORAGE_KEY = 'gm_tx_statuses';
+
+function buildTxNotification(tx, idx) {
+  const id = N.TX_BASE + (idx % 500); // keep IDs in a safe range
+  const isUpgrade    = tx.type === 'upgrades';
+  const isWithdrawal = tx.type === 'withdrawals';
+
+  if (tx.status === 'completed') {
+    if (isUpgrade) {
+      return {
+        id,
+        title: '🎉 Upgrade Approved!',
+        body:  'Your account upgrade has been activated. Start earning more today!',
+        extra: { route: '/dashboard' },
+      };
+    }
+    if (isWithdrawal) {
+      return {
+        id,
+        title: '✅ Withdrawal Processed!',
+        body:  `Your withdrawal has been approved and is on its way. Check your history.`,
+        extra: { route: '/history' },
+      };
+    }
+  }
+
+  if (tx.status === 'failed') {
+    if (isUpgrade) {
+      return {
+        id,
+        title: '⚠️ Upgrade Rejected',
+        body:  'Your upgrade request was not approved. Please check payment details or contact support.',
+        extra: { route: '/history' },
+      };
+    }
+    if (isWithdrawal) {
+      return {
+        id,
+        title: '❌ Withdrawal Rejected',
+        body:  'Your withdrawal request was rejected. Please contact support for assistance.',
+        extra: { route: '/history' },
+      };
+    }
+  }
+
+  return null;
+}
+
+export async function checkAndNotifyStatusChanges(transactions) {
+  if (!isNative() || !transactions?.length) return;
+
+  try {
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    const toSchedule = [];
+    const newStored  = { ...stored };
+
+    transactions.forEach((tx, idx) => {
+      const prev = stored[tx.id];
+      newStored[tx.id] = tx.status;
+
+      // Only notify when transitioning from 'pending' → 'completed' or 'failed'
+      if (prev === 'pending' && (tx.status === 'completed' || tx.status === 'failed')) {
+        const notif = buildTxNotification(tx, idx);
+        if (notif) {
+          toSchedule.push({
+            ...notif,
+            schedule: { at: new Date(Date.now() + 800 + idx * 400) }, // slight stagger
+            sound: 'default',
+            smallIcon: 'ic_stat_icon',
+            iconColor: tx.status === 'completed' ? '#1a9e8f' : '#ef4444',
+          });
+        }
+      }
+    });
+
+    // Persist updated statuses
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(newStored));
+
+    if (toSchedule.length > 0) {
+      await LocalNotifications.schedule({ notifications: toSchedule });
+    }
+  } catch (err) {
+    console.warn('[Notifications] checkAndNotifyStatusChanges:', err.message);
+  }
 }
 
 /* ─────────────────────────────────────────────────────────

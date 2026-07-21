@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authAPI, userAPI, adminAPI, publicAPI, setToken, clearToken, getToken } from '../services/api.js';
-import { scheduleMineNotifications, cancelMineNotifications } from '../hooks/useNotifications.js';
+import { scheduleMineNotifications, cancelMineNotifications, checkAndNotifyStatusChanges } from '../hooks/useNotifications.js';
 
 const AppContext = createContext(null);
 
@@ -58,6 +58,7 @@ export function AppProvider({ children }) {
         // Load user's own transactions
         const txs = await userAPI.getTransactions();
         setTransactions(txs);
+        checkAndNotifyStatusChanges(txs);
       } catch {
         clearToken(); // expired or invalid
       } finally {
@@ -92,6 +93,7 @@ export function AppProvider({ children }) {
     try {
       const txs = await userAPI.getTransactions();
       setTransactions(txs);
+      checkAndNotifyStatusChanges(txs);
     } catch { /* non-fatal */ }
 
     return data.user;
@@ -129,6 +131,7 @@ export function AppProvider({ children }) {
     try {
       const txs = await userAPI.getTransactions();
       setTransactions(txs);
+      checkAndNotifyStatusChanges(txs);
     } catch { /* non-fatal */ }
     return data.earned;
   };
@@ -158,6 +161,7 @@ export function AppProvider({ children }) {
     try {
       const txs = await userAPI.getTransactions();
       setTransactions(txs);
+      checkAndNotifyStatusChanges(txs);
     } catch { /* non-fatal */ }
   };
 
@@ -168,6 +172,7 @@ export function AppProvider({ children }) {
     try {
       const txs = await userAPI.getTransactions();
       setTransactions(txs);
+      checkAndNotifyStatusChanges(txs);
     } catch { /* non-fatal */ }
   };
 
