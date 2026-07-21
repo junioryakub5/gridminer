@@ -23,6 +23,12 @@
       "style": "DARK",
       "backgroundColor": "#0a0f1e",
       "overlaysWebView": false
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon_config_sample",
+      "iconColor": "#1a9e8f",
+      "sound": "default"
     }
   }
 }
+

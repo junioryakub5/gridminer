@@ -1,5 +1,7 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { useAndroidBackButton } from './hooks/useAndroidBackButton';
+import { initNotifications, maybeShowWelcome, useNotificationTapListener } from './hooks/useNotifications';
 import { AppProvider, useApp } from './context/AppContext';
 import Toast from './components/Toast';
 import SideNav from './components/SideNav';
@@ -67,10 +69,17 @@ function PublicUserRoute({ children }) {
 
 function AppRoutes() {
   const { user, authLoading, showToast } = useApp();
+  const navigate = useNavigate();
 
-  // Intercept Android system back button so it navigates within the app
-  // instead of closing it. Must be called inside BrowserRouter.
   useAndroidBackButton(showToast);
+
+  // Init notifications + welcome on first mount
+  useEffect(() => {
+    initNotifications().then(() => maybeShowWelcome());
+  }, []);
+
+  // Navigate to the right screen when user taps a notification
+  useNotificationTapListener(navigate);
 
   if (authLoading) return <BootLoader />;
 

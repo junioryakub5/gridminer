@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authAPI, userAPI, adminAPI, publicAPI, setToken, clearToken, getToken } from '../services/api.js';
+import { scheduleMineNotifications, cancelMineNotifications } from '../hooks/useNotifications.js';
 
 const AppContext = createContext(null);
 
@@ -52,6 +53,7 @@ export function AppProvider({ children }) {
         const { user: me } = await authAPI.me();
         setUser(me);
         updateMineAvailability(me.lastMinedAt);
+        scheduleMineNotifications(me.lastMinedAt);
 
         // Load user's own transactions
         const txs = await userAPI.getTransactions();
@@ -84,6 +86,7 @@ export function AppProvider({ children }) {
     setToken(data.token);
     setUser(data.user);
     updateMineAvailability(data.user.lastMinedAt);
+    scheduleMineNotifications(data.user.lastMinedAt);
 
     // Eagerly load transactions
     try {
@@ -96,6 +99,7 @@ export function AppProvider({ children }) {
 
   const logout = () => {
     clearToken();
+    cancelMineNotifications();
     setUser(null);
     setTransactions([]);
     setAllUsers([]);
@@ -120,6 +124,7 @@ export function AppProvider({ children }) {
     setUser(prev => ({ ...prev, balance: data.balance, lastMinedAt: new Date().toISOString() }));
     setCanMine(false);
     setTimeout(() => setCanMine(true), 24 * 60 * 60 * 1000);
+    scheduleMineNotifications(new Date().toISOString());
     // Reload transactions so the new mining entry appears
     try {
       const txs = await userAPI.getTransactions();
