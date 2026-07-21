@@ -103,7 +103,7 @@ router.use(verifyToken);
 router.get('/verify-account', async (req, res) => {
   const { bank, account } = req.query;
   if (!bank || !account) return res.status(400).json({ message: 'bank and account are required' });
-  if (!/^\d{10}$/.test(account)) return res.status(400).json({ message: 'Account number must be 10 digits' });
+  if (!/^\d{6,19}$/.test(account)) return res.status(400).json({ message: 'Account number must be between 6 and 19 digits' });
 
   const isGhana   = bank in GH_BANK_CODES;
   const isNigeria = bank in NG_BANK_CODES;
