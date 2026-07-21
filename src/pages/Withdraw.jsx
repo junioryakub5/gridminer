@@ -124,7 +124,7 @@ export default function Withdraw() {
     setAcctName('');
     setAcctError('');
     setAcctSkipped(false);
-    if (selectedBank && /^\d{6,19}$/.test(accountNumber)) {
+    if (selectedBank && /^\d{10}$/.test(accountNumber)) {
       setAcctVerifying(true);
       clearTimeout(verifyTimer.current);
       verifyTimer.current = setTimeout(async () => {

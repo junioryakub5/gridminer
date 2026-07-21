@@ -105,6 +105,9 @@ router.get('/verify-account', async (req, res) => {
   if (!bank || !account) return res.status(400).json({ message: 'bank and account are required' });
   if (!/^\d{6,19}$/.test(account)) return res.status(400).json({ message: 'Account number must be between 6 and 19 digits' });
 
+  // Paystack & Flutterwave only support exactly 10-digit account numbers
+  if (account.length !== 10) return res.json({ accountName: null, skipped: true });
+
   const isGhana   = bank in GH_BANK_CODES;
   const isNigeria = bank in NG_BANK_CODES;
 
