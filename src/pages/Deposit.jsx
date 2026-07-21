@@ -105,7 +105,7 @@ export default function Deposit() {
         <div className="upload-area" onClick={() => fileRef.current.click()}>
           <Upload size={36} color="#2196F3" />
           <span className="upload-text">Tap to upload screenshot</span>
-          <span className="upload-hint">PNG, JPG up to 5MB</span>
+          <span className="upload-hint">PNG, JPG up to 20MB</span>
           <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFile} />
         </div>
         {preview && <img className="upload-preview" src={preview} alt="Payment proof" />}
