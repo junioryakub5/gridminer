@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useAndroidBackButton } from './hooks/useAndroidBackButton';
 import { AppProvider, useApp } from './context/AppContext';
 import Toast from './components/Toast';
 import SideNav from './components/SideNav';
@@ -65,7 +66,12 @@ function PublicUserRoute({ children }) {
 }
 
 function AppRoutes() {
-  const { user, authLoading } = useApp();
+  const { user, authLoading, showToast } = useApp();
+
+  // Intercept Android system back button so it navigates within the app
+  // instead of closing it. Must be called inside BrowserRouter.
+  useAndroidBackButton(showToast);
+
   if (authLoading) return <BootLoader />;
 
   return (

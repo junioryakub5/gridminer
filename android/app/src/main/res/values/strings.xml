@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">GridMiner</string>
+    <string name="title_activity_main">GridMiner</string>
+    <string name="package_name">com.gridminer.app</string>
+    <string name="custom_url_scheme">com.gridminer.app</string>
+</resources>

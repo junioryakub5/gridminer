@@ -124,7 +124,7 @@ export default function Withdraw() {
     setAcctName('');
     setAcctError('');
     setAcctSkipped(false);
-    if (selectedBank && /^\d{10}$/.test(accountNumber)) {
+    if (selectedBank && /^\d{6,19}$/.test(accountNumber)) {
       setAcctVerifying(true);
       clearTimeout(verifyTimer.current);
       verifyTimer.current = setTimeout(async () => {
@@ -192,7 +192,7 @@ export default function Withdraw() {
       if (!walletBound) return showToast('Please bind your TRC20 wallet address first');
     } else {
       if (!selectedBank)                   return showToast('Please select a bank');
-      if (!/^\d{10}$/.test(accountNumber)) return showToast('Account number must be 10 digits');
+      if (!/^\d{6,19}$/.test(accountNumber)) return showToast('Account number must be between 6 and 19 digits');
       if (acctVerifying)                   return showToast('Verifying account, please wait...');
       // only block if verification ran AND failed (not skipped)
       if (!acctName && !acctSkipped)       return showToast('Please wait for account verification');
@@ -406,10 +406,10 @@ export default function Withdraw() {
                 <input
                   className="wd-acct-input"
                   type="tel"
-                  maxLength={10}
-                  placeholder="Enter 10-digit account number"
+                  maxLength={19}
+                  placeholder="Enter account number"
                   value={accountNumber}
-                  onChange={e => setAccountNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  onChange={e => setAccountNumber(e.target.value.replace(/\D/g, '').slice(0, 19))}
                 />
                 {acctVerifying && <Loader2 size={16} className="spin" style={{ color: '#8aabcc', flexShrink: 0 }} />}
                 {!acctVerifying && acctName && <CheckCircle2 size={16} style={{ color: '#1a9e8f', flexShrink: 0 }} />}
@@ -467,7 +467,7 @@ export default function Withdraw() {
             <button
               className="wd-submit-btn"
               onClick={handleSubmit}
-              disabled={loading || !isValid || !selectedBank || accountNumber.length !== 10 || acctVerifying || (!acctName && !acctSkipped)}
+              disabled={loading || !isValid || !selectedBank || accountNumber.length < 6 || acctVerifying || (!acctName && !acctSkipped)}
             >
               {loading
                 ? <><Loader2 size={16} className="spin" /> Processing…</>
