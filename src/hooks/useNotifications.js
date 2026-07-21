@@ -55,6 +55,7 @@ export async function scheduleMineNotifications(lastMinedAt) {
       body:  'Your daily USDT mining reward is ready. Tap to collect now!',
       schedule: { at: new Date(readyAt), allowWhileIdle: true },
       sound: 'default',
+      smallIcon: 'ic_stat_icon',
       iconColor: '#1a9e8f',
       extra: { route: '/dashboard' },
     });
@@ -63,6 +64,7 @@ export async function scheduleMineNotifications(lastMinedAt) {
     if (soonAt > now) {
       toSchedule.push({
         id:    N.MINE_SOON,
+        smallIcon: 'ic_stat_icon',
         title: '⏰ Mining Soon!',
         body:  'Your mine unlocks in 4 hours. Come back and collect your reward!',
         schedule: { at: new Date(soonAt), allowWhileIdle: true },
@@ -100,6 +102,7 @@ export async function maybeShowWelcome() {
         body:  'Start mining daily and earn real USDT rewards. Tap to get started!',
         schedule: { at: new Date(Date.now() + 4000) },
         sound: 'default',
+        smallIcon: 'ic_stat_icon',
         iconColor: '#1a9e8f',
       }],
     });
