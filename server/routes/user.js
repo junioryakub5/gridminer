@@ -320,14 +320,14 @@ router.post('/withdraw', async (req, res) => {
   const client = await pool.connect();
   try {
     const { address, amount, method, bankName, accountNumber } = req.body;
-    const withdrawMethod = method || 'crypto'; // 'crypto' | 'bank'
+    const withdrawMethod = method || 'crypto'; // 'crypto' | 'bank' | 'momo'
     const withdrawAmount = parseFloat(amount);
 
-    const MIN_WITHDRAWAL = 10;
-    const MAX_WITHDRAWAL = 10000;
-    const CRYPTO_FEE_PERCENT = 0;   // 0% fee for crypto
-    const BANK_FEE_PERCENT   = 0;   // 0% fee for bank transfer (adjust if needed)
-    const USD_TO_NGN_RATE    = 1550; // exchange rate
+    const MIN_WITHDRAWAL     = 10;
+    const MAX_WITHDRAWAL     = 10000;
+    const CRYPTO_FEE_PERCENT = 0;
+    const BANK_FEE_PERCENT   = 0;
+    const USD_TO_NGN_RATE    = 1550;
 
     // Shared validations
     if (isNaN(withdrawAmount) || withdrawAmount < MIN_WITHDRAWAL) {
@@ -343,9 +343,12 @@ router.post('/withdraw', async (req, res) => {
     } else if (withdrawMethod === 'bank') {
       if (!bankName?.trim())      return res.status(400).json({ message: 'Bank name is required' });
       if (!accountNumber?.trim()) return res.status(400).json({ message: 'Account number is required' });
-      if (!/^\d{10}$/.test(accountNumber.trim())) {
-        return res.status(400).json({ message: 'Account number must be exactly 10 digits' });
+      if (!/^\d{6,19}$/.test(accountNumber.trim())) {
+        return res.status(400).json({ message: 'Account number must be between 6 and 19 digits' });
       }
+    } else if (withdrawMethod === 'momo') {
+      if (!bankName?.trim())      return res.status(400).json({ message: 'Mobile Money network is required' });
+      if (!accountNumber?.trim()) return res.status(400).json({ message: 'Phone number is required' });
     } else {
       return res.status(400).json({ message: 'Invalid withdrawal method' });
     }
@@ -376,6 +379,8 @@ router.post('/withdraw', async (req, res) => {
     let label;
     if (withdrawMethod === 'crypto') {
       label = `Crypto withdrawal to ${address.trim().slice(0, 10)}...`;
+    } else if (withdrawMethod === 'momo') {
+      label = `Mobile Money to ${bankName} · ${accountNumber.trim()}`;
     } else {
       const ngnAmount = +(withdrawAmount * USD_TO_NGN_RATE).toFixed(2);
       label = `Bank transfer to ${bankName} ···${accountNumber.trim().slice(-4)} (${ngnAmount.toLocaleString()} NGN)`;

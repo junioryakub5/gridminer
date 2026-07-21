@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import {
   ChevronLeft, AlertCircle, Loader2, Wallet, Building2,
   ChevronDown, ShieldCheck, CreditCard, Search, CheckCircle2, XCircle,
+  Smartphone,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import BottomNav from '../components/BottomNav';
 import { userAPI } from '../services/api';
 
-/* ── Banks list (Nigeria + Ghana) ── */
+/* ── Banks list (Nigeria + Ghana banks only — no MoMo here) ── */
 const BANKS = [
   /* ── Nigeria ── */
   { label: '🇳🇬 Nigerian Banks', disabled: true },
@@ -66,11 +67,21 @@ const BANKS = [
   { label: 'United Bank for Africa Ghana (UBA)' },
   { label: 'Universal Merchant Bank (UMB)' },
   { label: 'Zenith Bank Ghana' },
-  /* Mobile Money */
-  { label: '📱 Ghana Mobile Money', disabled: true },
+];
+
+/* ── Mobile Money networks ── */
+const MOMO_NETWORKS = [
+  { label: '🇳🇬 Nigeria', disabled: true },
+  { label: 'MTN Nigeria MoMo' },
+  { label: 'Airtel Money Nigeria' },
+  { label: '🇬🇭 Ghana', disabled: true },
   { label: 'MTN Mobile Money (MoMo)' },
   { label: 'Vodafone Cash' },
   { label: 'AirtelTigo Money' },
+  { label: '🌍 Other', disabled: true },
+  { label: 'M-Pesa' },
+  { label: 'Orange Money' },
+  { label: 'Wave' },
 ];
 
 const MIN_WITHDRAWAL  = 10;
@@ -79,7 +90,6 @@ const USD_TO_NGN_RATE = 1550;
 const USD_TO_GHS_RATE = 15.2;
 const FEE_PERCENT     = 0;
 
-/* ── Detect if a selected bank is Ghanaian ── */
 const GHANA_BANK_LABELS = [
   'Absa Bank Ghana', 'Access Bank Ghana', 'Agricultural Development Bank',
   'CalBank', 'Consolidated Bank Ghana', 'Ecobank Ghana', 'Fidelity Bank Ghana',
@@ -96,7 +106,7 @@ export default function Withdraw() {
   const { user, submitWithdrawal, showToast } = useApp();
   const navigate = useNavigate();
 
-  /* ── tab: 'crypto' | 'bank' ── */
+  /* ── tab: 'crypto' | 'bank' | 'momo' ── */
   const [tab, setTab] = useState('crypto');
 
   /* ── shared ── */
@@ -120,6 +130,12 @@ export default function Withdraw() {
   const [acctError,     setAcctError]     = useState('');
   const verifyTimer = useRef(null);
 
+  /* ── mobile money ── */
+  const [momoNetwork,   setMomoNetwork]   = useState('');
+  const [momoQuery,     setMomoQuery]     = useState('');
+  const [momoOpen,      setMomoOpen]      = useState(false);
+  const [momoPhone,     setMomoPhone]     = useState('');
+
   useEffect(() => {
     setAcctName('');
     setAcctError('');
@@ -131,7 +147,7 @@ export default function Withdraw() {
         try {
           const data = await userAPI.verifyAccount(selectedBank, accountNumber);
           if (data.skipped) {
-            setAcctSkipped(true);   // verification not available for this bank
+            setAcctSkipped(true);
           } else {
             setAcctName(data.accountName);
           }
@@ -153,7 +169,7 @@ export default function Withdraw() {
   const parsedAmt   = parseFloat(amount) || 0;
   const feeAmt      = +(parsedAmt * FEE_PERCENT / 100).toFixed(2);
   const youReceive  = +(parsedAmt - feeAmt).toFixed(2);
-  const isGhana     = isGhanaBank(selectedBank);
+  const isGhana     = tab === 'bank' ? isGhanaBank(selectedBank) : ['MTN Mobile Money (MoMo)', 'Vodafone Cash', 'AirtelTigo Money'].some(n => momoNetwork?.startsWith(n));
   const localRate   = isGhana ? USD_TO_GHS_RATE : USD_TO_NGN_RATE;
   const localSymbol = isGhana ? '₵' : '₦';
   const localCode   = isGhana ? 'GHS' : 'NGN';
@@ -176,6 +192,20 @@ export default function Withdraw() {
     ? BANKS.filter(b => !b.disabled && b.label.toLowerCase().includes(bankQuery.toLowerCase()))
     : BANKS;
 
+  /* ── momo search ── */
+  const filteredMomo = momoQuery.trim()
+    ? MOMO_NETWORKS.filter(n => !n.disabled && n.label.toLowerCase().includes(momoQuery.toLowerCase()))
+    : MOMO_NETWORKS;
+
+  /* ── reset fields when switching tab ── */
+  const switchTab = (t) => {
+    setTab(t);
+    setAmount('');
+    setBankQuery(''); setSelectedBank(''); setBankOpen(false); setAccountNumber('');
+    setAcctName(''); setAcctError(''); setAcctSkipped(false);
+    setMomoNetwork(''); setMomoQuery(''); setMomoOpen(false); setMomoPhone('');
+  };
+
   /* ── submit ── */
   const handleSubmit = async () => {
     if (isNaN(parsedAmt) || parsedAmt < MIN_WITHDRAWAL) {
@@ -190,12 +220,14 @@ export default function Withdraw() {
 
     if (tab === 'crypto') {
       if (!walletBound) return showToast('Please bind your TRC20 wallet address first');
-    } else {
-      if (!selectedBank)                   return showToast('Please select a bank');
+    } else if (tab === 'bank') {
+      if (!selectedBank)                    return showToast('Please select a bank');
       if (!/^\d{6,19}$/.test(accountNumber)) return showToast('Account number must be between 6 and 19 digits');
-      if (acctVerifying)                   return showToast('Verifying account, please wait...');
-      // only block if verification ran AND failed (not skipped)
-      if (!acctName && !acctSkipped)       return showToast('Please wait for account verification');
+      if (acctVerifying)                    return showToast('Verifying account, please wait...');
+      if (!acctName && !acctSkipped)        return showToast('Please wait for account verification');
+    } else if (tab === 'momo') {
+      if (!momoNetwork) return showToast('Please select a Mobile Money network');
+      if (!/^\+?\d{7,15}$/.test(momoPhone.replace(/\s/g, ''))) return showToast('Please enter a valid phone number');
     }
 
     setLoading(true);
@@ -204,16 +236,13 @@ export default function Withdraw() {
         tab === 'crypto' ? walletAddr : '',
         parsedAmt,
         tab,
-        tab === 'bank' ? selectedBank : '',
-        tab === 'bank' ? accountNumber : '',
+        tab === 'bank' ? selectedBank : tab === 'momo' ? momoNetwork : '',
+        tab === 'bank' ? accountNumber : tab === 'momo' ? momoPhone : '',
       );
       setAmount('');
-      setSelectedBank('');
-      setBankQuery('');
-      setAccountNumber('');
-      setAcctName('');
-      setAcctError('');
-      setAcctSkipped(false);
+      setSelectedBank(''); setBankQuery(''); setAccountNumber('');
+      setAcctName(''); setAcctError(''); setAcctSkipped(false);
+      setMomoNetwork(''); setMomoQuery(''); setMomoPhone('');
     } catch (err) {
       showToast(err.message || 'Withdrawal failed');
     } finally {
@@ -268,13 +297,16 @@ export default function Withdraw() {
       </div>
 
       <div className="wd-body">
-        {/* Tabs */}
+        {/* Tabs — now 3 */}
         <div className="wd-tabs">
-          <button className={`wd-tab ${tab === 'crypto' ? 'active' : ''}`} onClick={() => setTab('crypto')}>
-            Crypto Withdrawal
+          <button className={`wd-tab ${tab === 'crypto' ? 'active' : ''}`} onClick={() => switchTab('crypto')}>
+            Crypto
           </button>
-          <button className={`wd-tab ${tab === 'bank' ? 'active' : ''}`} onClick={() => setTab('bank')}>
+          <button className={`wd-tab ${tab === 'bank' ? 'active' : ''}`} onClick={() => switchTab('bank')}>
             Bank Transfer
+          </button>
+          <button className={`wd-tab ${tab === 'momo' ? 'active' : ''}`} onClick={() => switchTab('momo')}>
+            Mobile Money
           </button>
         </div>
 
@@ -311,7 +343,6 @@ export default function Withdraw() {
         {/* ─── CRYPTO TAB ─── */}
         {tab === 'crypto' && (
           <>
-            {/* Wallet address */}
             <div className="wd-section-card">
               <div className="wd-field-label">
                 TRC20 Wallet Address
@@ -328,7 +359,6 @@ export default function Withdraw() {
               </div>
             </div>
 
-            {/* Network info */}
             <div className="wd-info-box">
               <ShieldCheck size={20} className="wd-info-icon" />
               <div>
@@ -337,7 +367,6 @@ export default function Withdraw() {
               </div>
             </div>
 
-            {/* Fee summary */}
             {parsedAmt > 0 && (
               <div className="wd-summary-card">
                 <div className="wd-summary-title"><CreditCard size={15} /> Withdrawal Fees</div>
@@ -347,7 +376,6 @@ export default function Withdraw() {
               </div>
             )}
 
-            {/* Submit */}
             <button
               className="wd-submit-btn"
               onClick={handleSubmit}
@@ -415,7 +443,6 @@ export default function Withdraw() {
                 {!acctVerifying && acctName && <CheckCircle2 size={16} style={{ color: '#1a9e8f', flexShrink: 0 }} />}
                 {!acctVerifying && acctError && <XCircle size={16} style={{ color: '#ef4444', flexShrink: 0 }} />}
               </div>
-              {/* Resolved account name */}
               {acctName && (
                 <div className="wd-acct-name">
                   <CheckCircle2 size={13} />
@@ -435,7 +462,6 @@ export default function Withdraw() {
               )}
             </div>
 
-            {/* Bank transfer info */}
             <div className="wd-info-box">
               <Building2 size={20} className="wd-info-icon" />
               <div>
@@ -444,7 +470,6 @@ export default function Withdraw() {
               </div>
             </div>
 
-            {/* Transaction summary */}
             {parsedAmt > 0 && (
               <div className="wd-summary-card">
                 <div className="wd-summary-title"><CreditCard size={15} /> Transaction Summary</div>
@@ -463,7 +488,6 @@ export default function Withdraw() {
               </div>
             )}
 
-            {/* Submit */}
             <button
               className="wd-submit-btn"
               onClick={handleSubmit}
@@ -475,7 +499,6 @@ export default function Withdraw() {
               }
             </button>
 
-            {/* Important notice */}
             <div className="wd-notice-box">
               <div className="wd-notice-title"><AlertCircle size={14} /> Important Notice</div>
               <ul className="wd-notice-list">
@@ -483,6 +506,108 @@ export default function Withdraw() {
                 <li>Maximum per transaction: ${MAX_WITHDRAWAL.toLocaleString()}.00 USD</li>
                 <li>Verify account details before confirming</li>
                 <li>Transfers outside banking hours processed next business day</li>
+              </ul>
+            </div>
+          </>
+        )}
+
+        {/* ─── MOBILE MONEY TAB ─── */}
+        {tab === 'momo' && (
+          <>
+            {/* Select Network */}
+            <div className="wd-section-card">
+              <div className="wd-field-label">Select Network</div>
+              <div className="wd-bank-dropdown" onClick={() => setMomoOpen(o => !o)}>
+                <Smartphone size={15} className="wd-search-icon" />
+                <input
+                  className="wd-bank-search"
+                  placeholder="Search network..."
+                  value={momoQuery}
+                  onChange={e => { setMomoQuery(e.target.value); setMomoOpen(true); }}
+                  onClick={e => e.stopPropagation()}
+                />
+                <ChevronDown size={16} className={`wd-chevron ${momoOpen ? 'open' : ''}`} />
+              </div>
+              {momoOpen && (
+                <div className="wd-bank-list">
+                  {filteredMomo.filter(n => !n.disabled).length === 0
+                    ? <div className="wd-bank-empty">No networks found</div>
+                    : filteredMomo.map((n, i) =>
+                        n.disabled
+                          ? <div key={i} className="wd-bank-group-header">{n.label}</div>
+                          : <div
+                              key={n.label}
+                              className={`wd-bank-item ${momoNetwork === n.label ? 'selected' : ''}`}
+                              onClick={() => { setMomoNetwork(n.label); setMomoQuery(n.label); setMomoOpen(false); }}
+                            >
+                              {n.label}
+                            </div>
+                      )
+                  }
+                </div>
+              )}
+            </div>
+
+            {/* Phone Number */}
+            <div className="wd-section-card">
+              <div className="wd-field-label">Mobile Money Phone Number</div>
+              <div className="wd-wallet-display">
+                <Smartphone size={16} className="wd-shield-icon" />
+                <input
+                  className="wd-acct-input"
+                  type="tel"
+                  maxLength={16}
+                  placeholder="e.g. +233 24 000 0000"
+                  value={momoPhone}
+                  onChange={e => setMomoPhone(e.target.value.replace(/[^\d\s+]/g, '').slice(0, 16))}
+                />
+              </div>
+            </div>
+
+            <div className="wd-info-box">
+              <Smartphone size={20} className="wd-info-icon" />
+              <div>
+                <div className="wd-info-title">Mobile Money Transfer</div>
+                <div className="wd-info-text">Funds will be sent directly to your mobile wallet. Ensure the phone number is registered on the selected network. Processing time: 5–15 minutes.</div>
+              </div>
+            </div>
+
+            {parsedAmt > 0 && (
+              <div className="wd-summary-card">
+                <div className="wd-summary-title"><Smartphone size={15} /> Transaction Summary</div>
+                <div className="wd-summary-row">
+                  <span>Amount</span>
+                  <span>{parsedAmt.toFixed(2)} USD = {localSymbol}{localAmount.toLocaleString()} {localCode}</span>
+                </div>
+                <div className="wd-summary-row">
+                  <span>Transfer Fee</span>
+                  <span>{FEE_PERCENT}% = {localSymbol}{localFee.toFixed(2)} {localCode}</span>
+                </div>
+                <div className="wd-summary-row total">
+                  <span>You Receive</span>
+                  <span>{localSymbol}{localReceive.toLocaleString()} {localCode}</span>
+                </div>
+              </div>
+            )}
+
+            <button
+              className="wd-submit-btn"
+              onClick={handleSubmit}
+              disabled={loading || !isValid || !momoNetwork || momoPhone.replace(/\s/g, '').length < 7}
+            >
+              {loading
+                ? <><Loader2 size={16} className="spin" /> Processing…</>
+                : <><Smartphone size={16} /> Withdraw via Mobile Money</>
+              }
+            </button>
+
+            <div className="wd-notice-box">
+              <div className="wd-notice-title"><AlertCircle size={14} /> Important Notice</div>
+              <ul className="wd-notice-list">
+                <li>Minimum withdrawal: ${MIN_WITHDRAWAL}.00 USD</li>
+                <li>Maximum per transaction: ${MAX_WITHDRAWAL.toLocaleString()}.00 USD</li>
+                <li>Phone number must be registered on the selected network</li>
+                <li>Double-check your number before submitting</li>
               </ul>
             </div>
           </>
