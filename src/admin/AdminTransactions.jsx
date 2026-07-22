@@ -6,6 +6,7 @@ import {
   Pickaxe, Link2, ArrowDownCircle, Zap, ListOrdered, Info
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { getApiBase } from '../services/api';
 import AdminLayout from './AdminLayout';
 import { adminAPI } from '../services/api';
 
@@ -45,7 +46,7 @@ function ReviewModal({ txId, onClose, onApprove, onReject }) {
 
   const pm = PM_LABELS[detail?.paymentMethod] || PM_LABELS.unknown;
   const tierNum = detail?.tierTarget;
-  const proofUrl = detail?.proofImage ? `/uploads/${detail.proofImage}` : null;
+  const proofUrl = detail?.proofImage ? `${getApiBase()}/uploads/${detail.proofImage}` : null;
 
   return (
     <>

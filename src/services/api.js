@@ -9,9 +9,14 @@ const isCapacitor =
   (window.location.protocol === 'https:' && window.location.hostname === 'localhost') ||
   (window.location.protocol === 'http:'  && window.location.hostname === 'localhost' && !!window.Capacitor);
 
+const BACKEND_ORIGIN = isCapacitor ? 'https://gridminer.site' : '';
+
 const BASE = isCapacitor
   ? 'https://gridminer.site/api'
   : '/api';
+
+/** Returns the backend server origin (empty string = same-origin in dev/prod) */
+export const getApiBase = () => BACKEND_ORIGIN;
 
 
 /* ── Token helpers ── */
