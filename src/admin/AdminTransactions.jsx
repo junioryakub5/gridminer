@@ -642,6 +642,7 @@ export default function AdminTransactions() {
                   <td><span className={`badge badge-${tx.status}`}>{tx.status}</span></td>
                   <td>
                     <div className="action-btns">
+                      {/* Upgrades & withdrawals → Review / Details button */}
                       {(tx.type === 'upgrades' || tx.type === 'withdrawals') && (
                         <button
                           className="act-btn"
@@ -660,7 +661,8 @@ export default function AdminTransactions() {
                           {tx.status === 'pending' ? 'Review' : 'Details'}
                         </button>
                       )}
-                      {tx.type !== 'upgrades' && tx.type !== 'withdrawals' && tx.status !== 'pending' && (
+                      {/* Mining, binding, etc. → status dropdown (always shown) */}
+                      {tx.type !== 'upgrades' && tx.type !== 'withdrawals' && (
                         <select
                           className="admin-select"
                           style={{ padding: '4px 8px', fontSize: 11, borderRadius: 6 }}
