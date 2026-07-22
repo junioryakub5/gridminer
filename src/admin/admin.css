@@ -420,11 +420,11 @@
 .admin-shell .admin-review-panel {
   position: fixed; top: 0; right: 0; bottom: 0;
   width: 100%;
-  max-width: 540px;
-  background: white; z-index: 700;
+  max-width: 520px;
+  background: #f4f8fc; z-index: 700;
   display: flex; flex-direction: column;
-  box-shadow: -8px 0 40px rgba(0,0,0,0.18);
-  animation: slideInRight 0.28s cubic-bezier(0.16,1,0.3,1);
+  box-shadow: -12px 0 48px rgba(0,20,50,0.22);
+  animation: slideInRight 0.3s cubic-bezier(0.16,1,0.3,1);
 }
 
 /* ── Form elements ── */
