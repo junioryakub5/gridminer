@@ -38,7 +38,8 @@ pool.query('SELECT NOW()')
         expires_at TIMESTAMPTZ NOT NULL,
         used       BOOLEAN NOT NULL DEFAULT false,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      )
+      );
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
     `);
   })
   .catch((err) => {

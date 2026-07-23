@@ -23,6 +23,7 @@ const safeUser = (u) => ({
   tier: u.tier, balance: parseFloat(u.balance),
   walletAddress: u.wallet_address,
   status: u.status, lastMinedAt: u.last_mined_at, referralCode: u.referral_code,
+  avatarUrl: u.avatar_url || null,
   joined: new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
 });
 

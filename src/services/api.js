@@ -81,6 +81,11 @@ export const userAPI = {
   saveWallet:      (address)                    => put('/user/wallet',     { address }),
   referralStats:   ()                           => get('/user/referral-stats'),
   verifyAccount:   (bank, account)              => get(`/user/verify-account?bank=${encodeURIComponent(bank)}&account=${encodeURIComponent(account)}`),
+  uploadAvatar:    (file) => {
+    const form = new FormData();
+    form.append('avatar', file);
+    return upload('/user/avatar', form);
+  },
 };
 
 /* ─────────────────────────────────────────────────────────

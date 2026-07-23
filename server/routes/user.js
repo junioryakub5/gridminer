@@ -2,7 +2,7 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import multer from 'multer';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from 'fs';
 import pool from '../db.js';
 import { verifyToken } from '../middleware/auth.js';
 
@@ -93,11 +93,46 @@ const safeUser = (u) => ({
   tier: u.tier, balance: parseFloat(u.balance),
   walletAddress: u.wallet_address,
   status: u.status, lastMinedAt: u.last_mined_at, referralCode: u.referral_code,
+  avatarUrl: u.avatar_url || null,
   joined: new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+});
+
+const AVATARS_DIR = path.join(__dirname, '..', 'uploads', 'avatars');
+if (!fs.existsSync(AVATARS_DIR)) {
+  fs.mkdirSync(AVATARS_DIR, { recursive: true });
+}
+
+const avatarStorage = multer.diskStorage({
+  destination: AVATARS_DIR,
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `avatar_${req.user.id}_${Date.now()}${ext}`);
+  },
+});
+const uploadAvatar = multer({
+  storage: avatarStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith('image/')) return cb(new Error('Only images allowed'));
+    cb(null, true);
+  },
 });
 
 const router = Router();
 router.use(verifyToken);
+
+/* ── POST /api/user/avatar ── */
+router.post('/avatar', uploadAvatar.single('avatar'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'Image is required' });
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    await pool.query('UPDATE users SET avatar_url = $1 WHERE id = $2', [avatarUrl, req.user.id]);
+    res.json({ avatarUrl });
+  } catch (err) {
+    console.error('POST /user/avatar:', err.message);
+    res.status(500).json({ message: 'Avatar upload failed' });
+  }
+});
 
 /* ── GET /api/user/verify-account?bank=GTB&account=0123456789 ── */
 router.get('/verify-account', async (req, res) => {
@@ -379,9 +414,10 @@ router.post('/withdraw', async (req, res) => {
 
     let label;
     if (withdrawMethod === 'crypto') {
-      label = `Crypto withdrawal to ${address.trim().slice(0, 10)}...`;
+      label = `Withdrawal to ${address.trim()} via USDT TRC20`;
     } else if (withdrawMethod === 'momo') {
-      label = `Mobile Money to ${bankName} · ${accountNumber.trim()}`;
+      const ngnAmount = +(withdrawAmount * USD_TO_NGN_RATE).toFixed(2);
+      label = `MoMo transfer to ${bankName} ···${accountNumber.trim().slice(-4)} (${ngnAmount.toLocaleString()} NGN)`;
     } else {
       const isGhanaBank = bankName && (bankName in GH_BANK_CODES || bankName.toLowerCase().includes('ghana'));
       if (isGhanaBank) {

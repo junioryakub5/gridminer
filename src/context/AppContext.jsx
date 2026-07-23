@@ -176,6 +176,11 @@ export function AppProvider({ children }) {
     } catch { /* non-fatal */ }
   };
 
+  const uploadAvatar = async (file) => {
+    const data = await userAPI.uploadAvatar(file);
+    setUser(prev => ({ ...prev, avatarUrl: data.avatarUrl }));
+  };
+
   /* ─────────────────────────────────────────────────────────
      ADMIN LOADERS (called by admin pages on mount)
   ───────────────────────────────────────────────────────── */
@@ -267,7 +272,7 @@ export function AppProvider({ children }) {
 
       /* user actions */
       mine, canMine, saveWallet, updateProfile, changePassword,
-      addUpgradeTransaction, submitWithdrawal,
+      addUpgradeTransaction, submitWithdrawal, uploadAvatar,
 
       /* user data */
       transactions, toast, showToast,

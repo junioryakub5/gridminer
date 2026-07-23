@@ -6,6 +6,7 @@ import {
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 import BottomNav from '../components/BottomNav';
+import { getApiBase } from '../services/api';
 
 /* ── Local-currency pill that alternates NGN ↔ GHS every 4 s ── */
 function LocalCurrencyPill({ balance }) {
@@ -183,8 +184,12 @@ export default function Dashboard() {
               </span>
             )}
           </button>
-          <button className="avatar-btn" onClick={() => navigate('/profile')}>
-            {user?.name?.[0]?.toUpperCase() || 'U'}
+          <button className="avatar-btn" onClick={() => navigate('/profile')} style={{ padding: user?.avatarUrl ? 0 : undefined, overflow: 'hidden' }}>
+            {user?.avatarUrl ? (
+              <img src={`${getApiBase()}${user.avatarUrl}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              user?.name?.[0]?.toUpperCase() || 'U'
+            )}
           </button>
         </div>
       </div>

@@ -55,6 +55,41 @@ function ReviewModal({ txId, onClose, onApprove, onReject }) {
     failed:    { bg: 'rgba(239,68,68,0.10)',   color: '#dc2626',  label: 'Rejected' },
   }[detail?.status] || { bg: '#f0f5ff', color: '#8aabcc', label: detail?.status };
 
+  let paymentMethod = 'Unknown';
+  let destBank = '—';
+  let destAccount = '—';
+  let destAmount = '—';
+
+  if (isWithdraw) {
+    const labelStr = detail?.withdrawalLabel || detail?.label || '';
+    if (labelStr.startsWith('Bank transfer to ')) {
+      paymentMethod = 'Bank Transfer';
+      const match = labelStr.match(/Bank transfer to (.+) ···(\d+) \(([\d,.]+ \w+)\)/);
+      if (match) {
+        destBank = match[1];
+        destAccount = '***' + match[2];
+        destAmount = match[3];
+      }
+    } else if (labelStr.startsWith('MoMo transfer to ')) {
+      paymentMethod = 'Mobile Money';
+      const match = labelStr.match(/MoMo transfer to (.+) ···(\d+) \(([\d,.]+ \w+)\)/);
+      if (match) {
+        destBank = match[1];
+        destAccount = '***' + match[2];
+        destAmount = match[3];
+      }
+    } else if (labelStr.startsWith('Withdrawal to ')) {
+      paymentMethod = 'Crypto (USDT TRC20)';
+      const match = labelStr.match(/Withdrawal to (.+) via USDT TRC20/);
+      if (match) {
+        destAccount = match[1];
+      }
+    } else if (labelStr.startsWith('Crypto withdrawal to ')) {
+      paymentMethod = 'Crypto (USDT TRC20)';
+      destAccount = detail?.userWallet || '—';
+    }
+  }
+
   return (
     <>
       {/* Backdrop */}
@@ -208,11 +243,13 @@ function ReviewModal({ txId, onClose, onApprove, onReject }) {
                 title={isWithdraw ? 'Withdrawal Details' : 'Upgrade Details'}
                 accentColor={isWithdraw ? '#ef4444' : '#1a9e8f'}
                 rows={isWithdraw ? [
-                  { label: 'Amount',      value: `$${parseFloat(detail.amount).toFixed(2)} USD`, highlight: true },
-                  { label: 'Fee',         value: '$0.00 (0%)' },
-                  { label: 'Net Payout',  value: `$${parseFloat(detail.amount).toFixed(2)} USD`, chip: true, chipColor: '#ef4444' },
-                  { label: 'Destination', value: detail.withdrawalLabel || detail.withdrawalAddress || detail.userWallet || '—', mono: true },
-                  { label: 'Submitted',   value: detail.date || '—', muted: true },
+                  { label: 'Payment Method', value: paymentMethod, highlight: true },
+                  ...(destBank !== '—' ? [{ label: 'Bank/Network', value: destBank }] : []),
+                  { label: 'Account (masked)', value: destAccount, mono: true },
+                  { label: 'Amount (USD)', value: `$${parseFloat(detail.amount).toFixed(2)} USD`, highlight: true, chip: true, chipColor: '#ef4444' },
+                  ...(destAmount !== '—' ? [{ label: 'Converted Amount', value: destAmount }] : []),
+                  ...(paymentMethod === 'Crypto (USDT TRC20)' ? [{ label: 'Wallet Address', value: detail.userWallet || '—', mono: true }] : []),
+                  { label: 'Submitted', value: detail.date || '—', muted: true },
                 ] : [
                   { label: 'Target Tier',    value: `Tier ${tierNum ?? '—'}`, chip: true, chipColor: '#f59e0b' },
                   { label: 'Mining Reward',  value: detail.tierEarn ? `$${detail.tierEarn}/24 h` : '—', highlight: true },

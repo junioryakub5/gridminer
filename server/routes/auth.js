@@ -38,6 +38,7 @@ const safeUser = (u) => ({
   status: u.status,
   lastMinedAt: u.last_mined_at,
   referralCode: u.referral_code,
+  avatarUrl: u.avatar_url || null,
   joined: new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
 });
 

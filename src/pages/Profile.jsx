@@ -1,18 +1,40 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Bell, Camera, ChevronRight, Eye, EyeOff, Settings, LogOut,
-  UserPen, Lock, Share2, Wallet
+  UserPen, Lock, Share2, Wallet, Loader2
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import BottomNav from '../components/BottomNav';
+import { getApiBase } from '../services/api';
 
 export default function Profile() {
-  const { user, logout } = useApp();
+  const { user, logout, uploadAvatar, showToast } = useApp();
   const navigate = useNavigate();
   const [showBalance, setShowBalance] = useState(true);
+  const fileInputRef = useRef(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const handleLogout = () => { logout(); navigate('/login'); };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Image must be less than 5MB');
+      return;
+    }
+    setUploadingAvatar(true);
+    try {
+      await uploadAvatar(file);
+      showToast('Avatar updated!');
+    } catch (err) {
+      showToast(err.message || 'Avatar upload failed');
+    } finally {
+      setUploadingAvatar(false);
+      e.target.value = null; // reset
+    }
+  };
 
   const settingItems = [
     { label: 'Edit Profile',        Icon: UserPen, path: '/edit-profile',    color: '#0d6e99' },
@@ -37,9 +59,21 @@ export default function Profile() {
 
       {/* Avatar + name row */}
       <div className="profile-user-row">
-        <div className="avatar-wrap">
-          <div className="avatar-lg">{user?.name?.[0]?.toUpperCase() || 'A'}</div>
-          <div className="cam-btn"><Camera size={10} color="white" /></div>
+        <div className="avatar-wrap" style={{ position: 'relative' }}>
+          {user?.avatarUrl ? (
+            <img src={`${getApiBase()}${user.avatarUrl}`} alt="Avatar" className="avatar-lg" style={{ objectFit: 'cover' }} />
+          ) : (
+            <div className="avatar-lg">{user?.name?.[0]?.toUpperCase() || 'A'}</div>
+          )}
+          {uploadingAvatar && (
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)', borderRadius: '50%' }}>
+               <Loader2 size={24} className="spin" color="white" />
+            </div>
+          )}
+          <div className="cam-btn" onClick={() => fileInputRef.current?.click()} style={{ cursor: 'pointer' }}>
+            <Camera size={10} color="white" />
+          </div>
+          <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
         </div>
         <div>
           <div className="profile-name">{user?.name}</div>
