@@ -20,8 +20,8 @@ export default function Profile() {
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      showToast('Image must be less than 5MB');
+    if (file.size > 20 * 1024 * 1024) {
+      showToast('Image must be less than 20MB');
       return;
     }
     setUploadingAvatar(true);
