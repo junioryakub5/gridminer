@@ -2,6 +2,18 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 
+const spinnerStyle = `
+@keyframes tut-spin { to { transform: rotate(360deg); } }
+@keyframes tut-pulse { 0%,100% { opacity:0.4; transform:scale(1); } 50% { opacity:1; transform:scale(1.08); } }
+.tut-spinner-ring {
+  width:52px;height:52px;border-radius:50%;
+  border:3px solid rgba(255,255,255,0.15);
+  border-top-color:#fff;
+  animation:tut-spin 0.8s linear infinite;
+}
+.tut-spinner-logo { animation:tut-pulse 1.6s ease-in-out infinite; }
+`;
+
 const STEPS = [
   {
     title: 'Welcome to GridMiner',
@@ -45,9 +57,15 @@ export default function Tutorials() {
   const [current, setCurrent] = useState(0);
   const [headerVisible, setHeaderVisible] = useState(true);
   const [bottomVisible, setBottomVisible] = useState(true);
+  // Track loading state per video — all start as loading
+  const [loading, setLoading] = useState(() => STEPS.map(() => true));
   const videoRefs = useRef([]);
   const trackRef = useRef(null);
   const containerRef = useRef(null);
+
+  const markLoaded = useCallback((i) => {
+    setLoading(prev => { const n = [...prev]; n[i] = false; return n; });
+  }, []);
 
   // Touch/drag state
   const dragRef = useRef({ startY: 0, isDragging: false, startedAt: 0 });
@@ -145,6 +163,9 @@ export default function Tutorials() {
       onClick={handleTap}
       ref={containerRef}
     >
+      {/* Spinner keyframe styles */}
+      <style>{spinnerStyle}</style>
+
       {/* Header */}
       <div
         style={{
@@ -222,7 +243,40 @@ export default function Tutorials() {
               preload={Math.abs(i - current) <= 1 ? 'auto' : 'metadata'}
               loop
               muted={false}
+              onCanPlay={() => markLoaded(i)}
             />
+            {/* Loading spinner overlay */}
+            {loading[i] && (
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  zIndex: 80,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 20,
+                  background: 'rgba(0,0,0,0.75)',
+                  backdropFilter: 'blur(6px)',
+                }}
+              >
+                <div className="tut-spinner-ring" />
+                <p
+                  className="tut-spinner-logo"
+                  style={{
+                    color: '#fff',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    letterSpacing: '0.08em',
+                    margin: 0,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Loading video…
+                </p>
+              </div>
+            )}
             {/* Dark gradient overlay */}
             <div
               style={{
