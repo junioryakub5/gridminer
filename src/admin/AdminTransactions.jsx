@@ -530,13 +530,11 @@ export default function AdminTransactions() {
   const handleApprove = async (id) => {
     await adminApproveUpgrade(id);
     await loadAdminTxs();
-    showToast('Upgrade approved successfully');
   };
 
   const handleReject = async (id) => {
     await adminRejectUpgrade(id);
     await loadAdminTxs();
-    showToast('Upgrade request rejected');
   };
 
   if (loading) return (

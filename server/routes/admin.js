@@ -45,7 +45,7 @@ router.get('/stats', async (req, res) => {
       pool.query("SELECT COALESCE(SUM(balance),0) AS s FROM users WHERE role != 'admin'"),
       pool.query("SELECT COUNT(*) AS c FROM transactions WHERE type = 'upgrades' AND status = 'pending'"),
       pool.query("SELECT COALESCE(SUM(amount),0) AS s FROM transactions WHERE type = 'mining' AND status = 'completed'"),
-      pool.query("SELECT COALESCE(SUM(amount),0) AS s FROM transactions WHERE type = 'withdrawals'"),
+      pool.query("SELECT COALESCE(SUM(amount),0) AS s FROM transactions WHERE type = 'withdrawals' AND status = 'completed'"),
       pool.query('SELECT COUNT(*) AS c FROM transactions'),
     ]);
     res.json({
@@ -95,13 +95,14 @@ router.put('/users/:id', async (req, res) => {
   try {
     const { name, email, tier, balance, walletAddress } = req.body;
     const userId = parseInt(req.params.id);
+    const emailLower = email.toLowerCase().trim();
 
     const { rows: existing } = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
     if (!existing[0]) return res.status(404).json({ message: 'User not found' });
 
     const { rows } = await pool.query(
       'UPDATE users SET name=$1, email=$2, tier=$3, balance=$4, wallet_address=$5 WHERE id=$6 RETURNING *',
-      [name, email, parseInt(tier), parseFloat(balance), walletAddress, userId]
+      [name, emailLower, parseInt(tier), parseFloat(balance), walletAddress, userId]
     );
     await logActivity(req.user.id, req.user.name, 'Updated user', name);
     res.json({ user: safeUser(rows[0]) });
@@ -249,15 +250,20 @@ router.patch('/transactions/:id/approve', async (req, res) => {
   const client = await pool.connect();
   try {
     const txId = parseInt(req.params.id);
-    const { rows } = await client.query('SELECT * FROM transactions WHERE id = $1', [txId]);
-    const tx = rows[0];
-    if (!tx) return res.status(404).json({ message: 'Transaction not found' });
-    if (tx.status !== 'pending') return res.status(400).json({ message: 'Only pending transactions can be approved' });
-
-    const { rows: uRows } = await client.query('SELECT * FROM users WHERE id = $1', [tx.user_id]);
-    const user = uRows[0];
-
     await client.query('BEGIN');
+    const { rows } = await client.query('SELECT * FROM transactions WHERE id = $1 FOR UPDATE', [txId]);
+    const tx = rows[0];
+    if (!tx) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ message: 'Transaction not found' });
+    }
+    if (tx.status !== 'pending') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ message: 'Only pending transactions can be approved' });
+    }
+
+    const { rows: uRows } = await client.query('SELECT * FROM users WHERE id = $1 FOR UPDATE', [tx.user_id]);
+    const user = uRows[0];
 
     if (tx.type === 'upgrades') {
       const tierMatch = (tx.label || '').match(/Tier (\d)/) || [];

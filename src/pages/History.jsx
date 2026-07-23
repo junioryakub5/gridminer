@@ -33,11 +33,21 @@ const ICON_COMPONENT = {
 
 export default function History() {
   const [active, setActive] = useState('all');
+  const [search, setSearch] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
   const { transactions } = useApp();
 
-  const filtered = active === 'all'
-    ? transactions
-    : transactions.filter(t => t.type === active);
+  const filtered = transactions.filter(t => {
+    if (active !== 'all' && t.type !== active) return false;
+    if (search.trim()) {
+      const s = search.toLowerCase();
+      const labelMatch = t.label?.toLowerCase().includes(s);
+      const typeMatch = t.type?.toLowerCase().includes(s);
+      const statusMatch = t.status?.toLowerCase().includes(s);
+      return labelMatch || typeMatch || statusMatch;
+    }
+    return true;
+  });
 
   return (
     <div className="page">
@@ -50,8 +60,21 @@ export default function History() {
           </h2>
           <p style={{ fontSize: 12, color: '#8aabcc', marginTop: 2 }}>Track all your activities</p>
         </div>
-        <button className="icon-btn" style={{ marginTop: 4 }}><Search size={18} /></button>
+        <button className="icon-btn" style={{ marginTop: 4 }} onClick={() => setShowSearch(!showSearch)}><Search size={18} /></button>
       </div>
+
+      {showSearch && (
+        <div style={{ padding: '0 14px 10px' }}>
+          <input 
+            type="text" 
+            placeholder="Search history..." 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="field"
+            style={{ width: '100%' }}
+          />
+        </div>
+      )}
 
       {/* Filter tabs */}
       <div className="history-tabs">

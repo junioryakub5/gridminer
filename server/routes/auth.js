@@ -4,8 +4,27 @@ import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import pool from '../db.js';
 import { signToken, verifyToken } from '../middleware/auth.js';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { message: 'Too many login attempts from this IP, please try again after 15 minutes' }
+});
+
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: { message: 'Too many accounts created from this IP, please try again after an hour' }
+});
+
+const forgotPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { message: 'Too many password reset requests from this IP, please try again after 15 minutes' }
+});
 
 /* helper — strip sensitive fields */
 const safeUser = (u) => ({
@@ -23,7 +42,7 @@ const safeUser = (u) => ({
 });
 
 /* ── POST /api/auth/register ── */
-router.post('/register', async (req, res) => {
+router.post('/register', registerLimiter, async (req, res) => {
   try {
     const { name, email, password, referralCode: usedCode } = req.body;
 
@@ -148,7 +167,7 @@ router.post('/register', async (req, res) => {
 });
 
 /* ── POST /api/auth/login ── */
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -188,7 +207,7 @@ router.get('/me', verifyToken, (req, res) => {
 });
 
 /* ── POST /api/auth/forgot-password ── */
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', forgotPasswordLimiter, async (req, res) => {
   try {
     const { email } = req.body;
     if (!email?.trim()) return res.status(400).json({ message: 'Email is required' });
@@ -207,13 +226,15 @@ router.post('/forgot-password', async (req, res) => {
     const code = String(Math.floor(100000 + Math.random() * 900000));
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
+    const hashedCode = await bcrypt.hash(code, 10);
+
     // Invalidate old codes for this user
     await pool.query('DELETE FROM password_resets WHERE user_id = $1', [user.id]);
 
     // Store new code
     await pool.query(
       'INSERT INTO password_resets (user_id, token, expires_at) VALUES ($1, $2, $3)',
-      [user.id, code, expiresAt]
+      [user.id, hashedCode, expiresAt]
     );
 
     // Send email
@@ -264,19 +285,28 @@ router.post('/reset-password', async (req, res) => {
     if (password.length < 6) return res.status(400).json({ message: 'Password must be at least 6 characters' });
 
     const { rows } = await pool.query(
-      `SELECT pr.id, pr.user_id FROM password_resets pr
+      `SELECT pr.id, pr.user_id, pr.token FROM password_resets pr
        JOIN users u ON u.id = pr.user_id
-       WHERE u.email = $1 AND pr.token = $2 AND pr.used = false AND pr.expires_at > NOW()`,
-      [email.toLowerCase(), code.trim()]
+       WHERE u.email = $1 AND pr.used = false AND pr.expires_at > NOW()`,
+      [email.toLowerCase()]
     );
 
     if (!rows.length) return res.status(400).json({ message: 'Invalid or expired code. Please request a new one.' });
 
-    const reset = rows[0];
+    let validReset = null;
+    for (const row of rows) {
+      if (await bcrypt.compare(code.trim(), row.token)) {
+        validReset = row;
+        break;
+      }
+    }
+
+    if (!validReset) return res.status(400).json({ message: 'Invalid or expired code. Please request a new one.' });
+
     const hash = await bcrypt.hash(password, 10);
 
-    await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, reset.user_id]);
-    await pool.query('UPDATE password_resets SET used = true WHERE id = $1', [reset.id]);
+    await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, validReset.user_id]);
+    await pool.query('UPDATE password_resets SET used = true WHERE id = $1', [validReset.id]);
 
     res.json({ message: 'Password updated successfully. You can now log in.' });
   } catch (err) {

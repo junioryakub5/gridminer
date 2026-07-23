@@ -35,6 +35,9 @@ export default function BindWallet() {
           <label className="form-label">TRC20 Wallet Address</label>
           <input className="field" placeholder="Enter TRC20 address" value={address} onChange={e => setAddress(e.target.value)} required />
           <p className="form-hint">Only TRC20 (USDT) addresses are supported</p>
+          {address && (address[0] !== 'T' || address.length !== 34) && (
+            <p style={{ color: '#d97706', fontSize: 12, marginTop: 4 }}>This doesn't look like a valid TRC20 address. Double-check before saving.</p>
+          )}
         </div>
         <button type="submit" className="btn-solid w-full" disabled={loading}>
           {loading ? <Loader2 size={14} className="spin" /> : 'Save Wallet Address'}

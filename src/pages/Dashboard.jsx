@@ -125,12 +125,20 @@ function MineClock({ lastMinedAt, canMine, onMine, mining }) {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { user, mine, canMine, TIER_DATA, showToast, saveWallet } = useApp();
+  const { user, mine, canMine, TIER_DATA, showToast, saveWallet, transactions = [] } = useApp();
   const [mining, setMining]         = useState(false);
   const [walletInput, setWalletInput] = useState(user?.walletAddress || '');
   const [walletEdit, setWalletEdit]   = useState(false);
 
   const balance  = user?.balance ?? 0;
+
+  const notifLastSeen = localStorage.getItem('notif_last_seen') || 0;
+  const unreadCount = transactions.filter(t => new Date(t.date).getTime() > new Date(notifLastSeen).getTime()).length;
+
+  const handleBellClick = () => {
+    localStorage.setItem('notif_last_seen', new Date().toISOString());
+    navigate('/notifications');
+  };
 
   const handleMine = async () => {
     if (!canMine || mining) return;
@@ -150,7 +158,6 @@ export default function Dashboard() {
     try {
       await saveWallet(walletInput);
       setWalletEdit(false);
-      showToast('Wallet address saved!');
     } catch (err) {
       showToast(err.message || 'Failed to save wallet');
     }
@@ -168,9 +175,13 @@ export default function Dashboard() {
           <span className="dash-sub">Secure TRC20 Network</span>
         </div>
         <div className="dash-header-right">
-          <button className="icon-btn" onClick={() => navigate('/notifications')}>
+          <button className="icon-btn" onClick={handleBellClick} style={{ position: 'relative' }}>
             <Bell size={20} />
-            <span className="badge-dot" />
+            {unreadCount > 0 && (
+              <span className="badge-dot" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, width: 14, height: 14, padding: 0 }}>
+                {unreadCount}
+              </span>
+            )}
           </button>
           <button className="avatar-btn" onClick={() => navigate('/profile')}>
             {user?.name?.[0]?.toUpperCase() || 'U'}
@@ -249,6 +260,9 @@ export default function Dashboard() {
                   autoFocus
                 />
               </div>
+              {walletInput && (walletInput[0] !== 'T' || walletInput.length !== 34) && (
+                <p style={{ color: '#d97706', fontSize: 12, marginTop: 4 }}>This doesn't look like a valid TRC20 address. Double-check before saving.</p>
+              )}
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button className="btn-outline" onClick={() => setWalletEdit(false)}>Cancel</button>

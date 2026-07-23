@@ -21,7 +21,7 @@ export default function ForgotPassword() {
 
   /* ── Step 1: send code ── */
   const handleSendCode = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     setError('');
     setLoading(true);
     try {

@@ -1,8 +1,9 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, TrendingUp, CreditCard, User } from 'lucide-react';
+import { Home, TrendingUp, CreditCard, User, History } from 'lucide-react';
 
 const navItems = [
   { path: '/dashboard', icon: Home, label: 'Home' },
+  { path: '/history', icon: History, label: 'History' },
   { path: '/upgrade', icon: TrendingUp, label: 'Upgrade' },
   { path: '/withdraw', icon: CreditCard, label: 'Withdraw' },
   { path: '/profile', icon: User, label: 'Profile' },
