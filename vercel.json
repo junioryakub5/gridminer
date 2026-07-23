@@ -5,6 +5,10 @@
       "destination": "http://187.124.35.84:3005/api/$1"
     },
     {
+      "source": "/uploads/(.*)",
+      "destination": "http://187.124.35.84:3005/uploads/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

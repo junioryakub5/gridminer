@@ -10,6 +10,7 @@ import SideNav from './components/SideNav';
 import Login          from './pages/Login';
 import Register       from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword  from './pages/ResetPassword';
 import Dashboard      from './pages/Dashboard';
 import Upgrade        from './pages/Upgrade';
 import PaymentMethod  from './pages/PaymentMethod';
@@ -96,6 +97,7 @@ function AppRoutes() {
       <Route path="/login"          element={<PublicUserRoute><Login /></PublicUserRoute>} />
       <Route path="/register"       element={<PublicUserRoute><Register /></PublicUserRoute>} />
       <Route path="/forgot-password" element={<PublicUserRoute><ForgotPassword /></PublicUserRoute>} />
+      <Route path="/reset-password"  element={<PublicUserRoute><ResetPassword /></PublicUserRoute>} />
       <Route path="/tutorials"       element={<PublicUserRoute><Tutorials /></PublicUserRoute>} />
 
       {/* Protected user pages — scoped in .user-app */}

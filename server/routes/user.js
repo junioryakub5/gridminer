@@ -328,6 +328,7 @@ router.post('/withdraw', async (req, res) => {
     const CRYPTO_FEE_PERCENT = 0;
     const BANK_FEE_PERCENT   = 0;
     const USD_TO_NGN_RATE    = 1550;
+    const USD_TO_GHS_RATE    = 15.2;
 
     // Shared validations
     if (isNaN(withdrawAmount) || withdrawAmount < MIN_WITHDRAWAL) {
@@ -382,8 +383,14 @@ router.post('/withdraw', async (req, res) => {
     } else if (withdrawMethod === 'momo') {
       label = `Mobile Money to ${bankName} · ${accountNumber.trim()}`;
     } else {
-      const ngnAmount = +(withdrawAmount * USD_TO_NGN_RATE).toFixed(2);
-      label = `Bank transfer to ${bankName} ···${accountNumber.trim().slice(-4)} (${ngnAmount.toLocaleString()} NGN)`;
+      const isGhanaBank = bankName && (bankName in GH_BANK_CODES || bankName.toLowerCase().includes('ghana'));
+      if (isGhanaBank) {
+        const ghsAmount = +(withdrawAmount * USD_TO_GHS_RATE).toFixed(2);
+        label = `Bank transfer to ${bankName} ···${accountNumber.trim().slice(-4)} (${ghsAmount.toLocaleString()} GHS)`;
+      } else {
+        const ngnAmount = +(withdrawAmount * USD_TO_NGN_RATE).toFixed(2);
+        label = `Bank transfer to ${bankName} ···${accountNumber.trim().slice(-4)} (${ngnAmount.toLocaleString()} NGN)`;
+      }
     }
 
     await client.query(
